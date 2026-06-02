@@ -153,6 +153,114 @@ impl<'a> Pdf<'a> {
             },
         });
     }
+
+    /// Emit a left-aligned, word-wrapped paragraph starting at baseline `top`
+    /// (from page top); returns the `top` just past the last line.
+    fn paragraph(&mut self, x: f32, top: f32, text: &str, size: f32, col: Color, max_w: f32) -> f32 {
+        let by = |t: f32| PAGE_H - t;
+        let lines = self.wrap(text, false, size, max_w);
+        let mut y = top;
+        for ln in &lines {
+            self.line(x, by(y), ln, false, size, col.clone(), None);
+            y += size + 2.4;
+        }
+        y
+    }
+
+    /// Render a self-contained table (header band + alternating rows + grid)
+    /// at absolute `top` (from page top). Each cell is (text, bold, color,
+    /// optional link URL). Returns the `top` coordinate of the table's bottom.
+    #[allow(clippy::too_many_arguments)]
+    fn draw_table(
+        &mut self,
+        x: f32,
+        top: f32,
+        widths: &[f32],
+        headers: &[&str],
+        rows: &[Vec<(String, bool, Color, Option<String>)>],
+        pal: &Pal,
+        cell: f32,
+        head: f32,
+        lh: f32,
+        pad_x: f32,
+        pad_y: f32,
+    ) -> f32 {
+        let by = |t: f32| PAGE_H - t;
+        let table_w: f32 = widths.iter().sum();
+        let ncol = widths.len();
+
+        let head_wrap: Vec<Vec<String>> = headers
+            .iter()
+            .enumerate()
+            .map(|(i, h)| self.wrap(h, true, head, widths[i] - pad_x * 2.0))
+            .collect();
+        let head_lines = head_wrap.iter().map(|l| l.len()).max().unwrap_or(1) as f32;
+        let head_h = head_lines * lh + pad_y * 2.0;
+
+        let row_wrap: Vec<Vec<Vec<String>>> = rows
+            .iter()
+            .map(|r| {
+                r.iter()
+                    .enumerate()
+                    .map(|(i, (t, b, _, _))| self.wrap(t, *b, cell, widths[i] - pad_x * 2.0))
+                    .collect()
+            })
+            .collect();
+        let row_h: Vec<f32> = row_wrap
+            .iter()
+            .map(|r| r.iter().map(|c| c.len()).max().unwrap_or(1) as f32 * lh + pad_y * 2.0)
+            .collect();
+        let table_h = head_h + row_h.iter().sum::<f32>();
+
+        // Fills
+        self.fill_rect(x, by(top + head_h), table_w, head_h, pal.header_bg.clone());
+        let mut ry = top + head_h;
+        for (i, h) in row_h.iter().enumerate() {
+            let c = if i % 2 == 0 { pal.row_a.clone() } else { pal.row_b.clone() };
+            self.fill_rect(x, by(ry + h), table_w, *h, c);
+            ry += h;
+        }
+        // Header text
+        let mut cx = x;
+        for (i, lines) in head_wrap.iter().enumerate() {
+            for (li, ln) in lines.iter().enumerate() {
+                self.line(cx + pad_x, by(top + pad_y + head + li as f32 * lh), ln, true, head, pal.header_fg.clone(), None);
+            }
+            cx += widths[i];
+        }
+        // Row text
+        let mut ry = top + head_h;
+        for (ri, r) in rows.iter().enumerate() {
+            let mut cx = x;
+            for (i, (_, b, col, url)) in r.iter().enumerate() {
+                for (li, ln) in row_wrap[ri][i].iter().enumerate() {
+                    self.line(cx + pad_x, by(ry + pad_y + cell + li as f32 * lh), ln, *b, cell, col.clone(), url.as_deref());
+                }
+                cx += widths[i];
+            }
+            ry += row_h[ri];
+        }
+        // Grid
+        let g_top = by(top);
+        let g_bot = by(top + table_h);
+        let mut vx = x;
+        self.seg(vx, g_top, vx, g_bot, 0.8, pal.outer.clone());
+        for i in 0..ncol {
+            vx += widths[i];
+            let last = i == ncol - 1;
+            self.seg(vx, g_top, vx, g_bot, if last { 0.8 } else { 0.5 }, if last { pal.outer.clone() } else { pal.border.clone() });
+        }
+        self.seg(x, g_top, x + table_w, g_top, 0.8, pal.outer.clone());
+        let yh = top + head_h;
+        self.seg(x, by(yh), x + table_w, by(yh), 0.8, pal.outer.clone());
+        let mut ry = yh;
+        for (i, h) in row_h.iter().enumerate() {
+            ry += h;
+            let last = i == row_h.len() - 1;
+            self.seg(x, by(ry), x + table_w, by(ry), if last { 0.8 } else { 0.5 }, if last { pal.outer.clone() } else { pal.border.clone() });
+        }
+        top + table_h
+    }
 }
 
 struct Row {
@@ -165,6 +273,16 @@ struct Row {
     links: &'static [(&'static str, &'static str)],
     sites: &'static str,
     notes: &'static str,
+}
+
+/// Shared palette passed to `Pdf::draw_table`.
+struct Pal {
+    header_bg: Color,
+    header_fg: Color,
+    row_a: Color,
+    row_b: Color,
+    border: Color,
+    outer: Color,
 }
 
 /// One public company's audited FY2025 10-K figures (page 2).
@@ -549,10 +667,118 @@ fn main() {
     pdf.line(MARGIN_X, by(f2 + 22.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 33.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
 
+    // ----- Page 2, lower: PP&E composition — compute/servers vs. real estate -----
+    let pal = Pal {
+        header_bg: header_bg.clone(),
+        header_fg: header_fg.clone(),
+        row_a: row_a.clone(),
+        row_b: row_b.clone(),
+        border: border.clone(),
+        outer: outer.clone(),
+    };
+    let mut t3 = f2 + 33.0 + 30.0;
+    pdf.line(MARGIN_X, by(t3), "Where the capital sits — compute/servers vs. real estate (FY2025 gross PP&E, from each 10-K)", true, 13.0, title_c.clone(), None);
+    t3 += 13.0;
+    pdf.line(MARGIN_X, by(t3), "The audited equipment-vs-plant split that page 1's $/GW estimates approximate. GPUs sit in the \"compute\" bucket; SEC filings do not isolate GPU spend.", false, 8.5, gray.clone(), None);
+    t3 += 13.0;
+
+    let comp_head = [
+        "Company",
+        "Compute / server equipment (gross)",
+        "Real estate (buildings + land)",
+        "Construction in progress",
+        "Finance-lease ROU (leased)",
+        "Source",
+    ];
+    let comp_w = [110.0f32, 172.0, 152.0, 110.0, 122.0, 120.0]; // 786
+    // Ordered by FY2025 capex (matches the table above).
+    let comp_cells: [(&str, &str, &str, &str, &str, &str); 4] = [
+        ("Amazon (AWS)", "$172.5B  servers & networking", "$155.1B  land & buildings", "$71.7B", "in land & bldg¹", AMZN),
+        ("Alphabet (Google)", "~$122B  \u{2248}60% of tech. infra²", "~$82B DC bldg + $48.3B office²", "$78.6B  not yet in service", "embedded²", GOOG),
+        ("Meta Platforms", "$98.0B  servers & network assets", "$59.3B  buildings + land", "$50.5B", "$8.2B", META),
+        ("Microsoft (Azure)", "$132.8B  computer equip. & sw", "$159.4B  bldg + land + leasehold", "\u{2014}³", "$44.0B  (net)", MSFT),
+    ];
+    let comp_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = comp_cells
+        .iter()
+        .map(|(co, compute, re, cip, fl, url)| {
+            vec![
+                (co.to_string(), true, company_c.clone(), None),
+                (compute.to_string(), true, capex_c.clone(), None),
+                (re.to_string(), false, ink.clone(), None),
+                (cip.to_string(), false, ink.clone(), None),
+                (fl.to_string(), false, ink.clone(), None),
+                ("10-K \u{2197}".to_string(), false, link_c.clone(), Some(url.to_string())),
+            ]
+        })
+        .collect();
+    let comp_bottom = pdf.draw_table(s_x, t3 + 4.0, &comp_w, &comp_head, &comp_rows, &pal, cell, head, lh, pad_x, pad_y);
+
+    let fw = PAGE_W - 2.0 * MARGIN_X;
+    let mut cf = comp_bottom + 14.0;
+    cf = pdf.paragraph(MARGIN_X, cf, "All figures are FY2025 gross (at cost) from each 10-K's property & equipment note, except finance-lease right-of-use assets (net). Category labels differ by filer; the \"compute\" column is each company's own server/equipment bucket — SEC filings do not isolate GPU spend.", 7.2, gray.clone(), fw) + 2.0;
+    cf = pdf.paragraph(MARGIN_X, cf, "¹ Amazon reports land and buildings as one line (finance-lease property included within it) and its PP&E also holds large non-data-center fulfilment/logistics assets (heavy & other equipment $128.9B), so its compute share understates data-center intensity.", 7.2, gray.clone(), fw) + 2.0;
+    cf = pdf.paragraph(MARGIN_X, cf, "² Alphabet's 10-K states ~60% of \"technical infrastructure\" ($203.7B) is servers & network equipment (\u{2248}$122B); the rest (\u{2248}$82B) is data-center land/buildings. Office space ($48.3B) is separate; finance-lease ROU is embedded in PP&E, not itemized.", 7.2, gray.clone(), fw) + 2.0;
+    pdf.paragraph(MARGIN_X, cf, "³ Microsoft presents PP&E at cost with no construction-in-progress line ($32.1B committed for datacenter/building construction at fiscal year-end); its $44.0B net finance-lease right-of-use assets are reported in the leases note, not in the PP&E table.", 7.2, gray.clone(), fw);
+
     let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
+    // ===================== PAGE 3: private operators (estimates) =====================
+    let mut t4 = 24.0f32;
+    pdf.line(MARGIN_X, by(t4), "Private operators — GPU/silicon vs. construction, power & land", true, 15.0, title_c.clone(), None);
+    t4 += 15.0;
+    pdf.line(MARGIN_X, by(t4), "xAI, OpenAI and Anthropic file no SEC reports. The figures below are company announcements or press/analyst ESTIMATES — not audited. They are shown apart from the SEC pages on purpose.", false, 9.0, gray.clone(), None);
+    t4 += 14.0;
+
+    let priv_head = [
+        "Company / flagship",
+        "GPUs / silicon",
+        "Construction, power & land (plant)",
+        "Split basis (press/analyst estimate)",
+    ];
+    let priv_w = [120.0f32, 196.0, 200.0, 270.0]; // 786
+    let priv_cells: [(&str, &str, &str, &str); 3] = [
+        (
+            "xAI — Colossus (Memphis, TN)",
+            "~$18B chips reported for Colossus 2 (~555k Nvidia GB200/GB300); Colossus 1 ~230k H100/H200/GB200",
+            "Not separately costed: retrofit of a former Electrolux factory, ~35 on-site gas turbines, Tesla Megapacks, ~1 GW gas plant in Mississippi. Colossus 1 plant ~$6\u{2013}7B class.",
+            "~70%+ silicon (inferred — only the chip order is reported; facility cost undisclosed). Sources: SiliconANGLE, Introl, Global Data Center Hub.",
+        ),
+        (
+            "OpenAI — Stargate (Abilene, TX)",
+            "~$25\u{2013}30B+ for ~400\u{2013}450k Nvidia GB200 (estimate; chips owned/financed on the Stargate side)",
+            "~$15B facility for 1.2 GW — built by Crusoe, financed separately via Blue Owl/JPMorgan, explicitly excludes the chips.",
+            "~65\u{2013}70% silicon — the only one of the three with a separately-financed plant figure to check against. Sources: CNBC, DataCenterDynamics, Crusoe.",
+        ),
+        (
+            "Anthropic — mostly rented compute",
+            "Largely leased, not owned: AWS Trainium2 (>1M, \"Project Rainier\"), Google TPU v7 (\u{2264}1M), Azure (Nvidia), xAI Colossus 1 (~$1.25B/mo)",
+            "$50B Fluidstack build (Abernathy, TX + Lake Mariner, NY); compute-vs-real-estate split not disclosed.",
+            "n/a — Anthropic's spend is dominated by multi-year compute leases (opex), not an owned chip-vs-plant capex split. Sources: Anthropic, CNBC, DataCenterDynamics.",
+        ),
+    ];
+    let priv_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = priv_cells
+        .iter()
+        .map(|(co, gpu, plant, basis)| {
+            vec![
+                (co.to_string(), true, company_c.clone(), None),
+                (gpu.to_string(), false, capex_c.clone(), None),
+                (plant.to_string(), false, ink.clone(), None),
+                (basis.to_string(), false, note_c.clone(), None),
+            ]
+        })
+        .collect();
+    let priv_bottom = pdf.draw_table(s_x, t4 + 6.0, &priv_w, &priv_head, &priv_rows, &pal, cell, head, lh, pad_x, pad_y);
+
+    let pfw = PAGE_W - 2.0 * MARGIN_X;
+    let mut pf = priv_bottom + 16.0;
+    pf = pdf.paragraph(MARGIN_X, pf, "Industry rule of thumb for an all-in AI training cluster: GPUs/servers \u{2248} 60\u{2013}80% of capex, the physical facility (shell, power, cooling, land) \u{2248} 20\u{2013}40% (Epoch AI; SemiAnalysis). xAI's reported chip-only figure and OpenAI's separately-financed ~$15B for 1.2 GW of plant are both consistent with this.", 7.5, gray.clone(), pfw) + 3.0;
+    pf = pdf.paragraph(MARGIN_X, pf, "This contrasts with the public companies' audited PP&E split on page 2: there the \"compute\" and real-estate buckets are reported line items; here both sides are estimates, and for Anthropic the spend is mostly multi-year compute leases (opex) rather than owned capital.", 7.5, gray.clone(), pfw) + 3.0;
+    pdf.paragraph(MARGIN_X, pf, "Links to each operator's primary announcement are in the Capex column on page 1.", 7.5, gray.clone(), pfw);
+
+    let page3 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+
     // ---- Save ----
-    doc.with_pages(vec![page1, page2]);
+    doc.with_pages(vec![page1, page2, page3]);
     let mut sw: Vec<printpdf::PdfWarnMsg> = Vec::new();
     let bytes = doc.save(&PdfSaveOptions::default(), &mut sw);
     std::fs::write("pdf/datacenter_sources.pdf", &bytes).expect("write pdf");

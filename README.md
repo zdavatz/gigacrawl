@@ -10,11 +10,16 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 
 - [`png/datacenter_capacity.png`](png/datacenter_capacity.png) — the chart as a
   styled table (title, header band, alternating rows, wrapped cells).
-- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **2 pages**, A4
+- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **3 pages**, A4
   landscape: (1) the same table, where each row's **Capex** cell carries a
   clickable source link (public → FY2025 **10-K on sec.gov**; private → primary
   announcement); (2) a **SEC financials** page (capex FY23–25, PP&E, operating
-  cash flow, capex÷OCF, leases-not-yet-commenced), each row linked to its 10-K.
+  cash flow, capex÷OCF, leases-not-yet-commenced) plus a **PP&E composition**
+  table splitting audited PP&E into compute/servers vs. real estate vs.
+  construction-in-progress vs. finance-lease ROU, each row linked to its 10-K;
+  (3) a **private operators** page with press/analyst estimates of the
+  GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
+  (clearly separated from the SEC pages, as none of the three file with the SEC).
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
 

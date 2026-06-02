@@ -41,11 +41,20 @@ applied in both files:
   `ab_glyph` crates. Hand-rolled table layout: a `rows: Vec<[Cell; NCOL]>`
   drives fixed-width columns; `wrap_text` reflows cell text; row heights derive
   from the tallest wrapped cell; glyphs are rasterized with alpha blending.
-- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the PDF with
-  `printpdf` 0.9 (an `Op`-based document model). A `rows: [Row; _]` table with
-  filled header/row rectangles (`Op::DrawPolygon` with `PaintMode::Fill` —
-  note `Op::DrawRectangle` does **not** fill in 0.9), grid lines, and per-row
-  source hyperlinks (`Op::LinkAnnotation` with `Actions::Uri`).
+- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the **3-page** PDF
+  with `printpdf` 0.9 (an `Op`-based document model). Filled header/row
+  rectangles (`Op::DrawPolygon` with `PaintMode::Fill` — note
+  `Op::DrawRectangle` does **not** fill in 0.9), grid lines, and per-row source
+  hyperlinks (`Op::LinkAnnotation` with `Actions::Uri`). Page 1: the capacity
+  table (`rows: [Row; _]`). Page 2: the SEC-financials table (`[Sec; _]`) plus a
+  **PP&E-composition** table (compute/servers vs. real estate vs.
+  construction-in-progress vs. finance-lease ROU, FY2025 gross per 10-K). Page 3:
+  **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates* — press/
+  analyst, not SEC. The two later tables are drawn by the reusable
+  `Pdf::draw_table` helper (header band + alternating rows + grid; each cell is
+  `(text, bold, color, Option<url>)`); long footnotes use `Pdf::paragraph`
+  (word-wrapped — plain `Pdf::line` does **not** wrap and will overflow the page).
+  `--post-sec` still rasterizes **page 2** only.
 - `src/linkedin.rs` — LinkedIn OAuth + image publishing, used only by
   `datacenter_chart` (via `mod linkedin;`). Self-contained: blocking `reqwest`
   + a `std::net::TcpListener` callback server on port 8092 (no tokio). Uses
