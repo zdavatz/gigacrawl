@@ -145,7 +145,7 @@ fn auth_header(creds: &Creds, method: &str, url: &str) -> String {
 fn tweet_text() -> String {
     "Data center power capacity (GW): operational vs. planned, with FY2025 capex from SEC 10-Ks — \
      Amazon, Microsoft, Google, Meta, xAI, OpenAI, Anthropic.\n\
-     Clickable PDF + code: github.com/zdavatz/gigacrawl\n\
+     Clickable PDF (each figure links to its 10-K): github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n\
      #AI #DataCenters #CapEx"
         .to_string()
 }

@@ -57,11 +57,15 @@ applied in both files:
 - `src/twitter.rs` — X/Twitter image posting, used only by `datacenter_chart`
   (`--post-twitter` / `--post-x`). Hand-rolled OAuth 1.0a (HMAC-SHA1; only the
   oauth_* params are signed — multipart and JSON bodies are excluded, which is
-  correct for both endpoints). Uploads via v1.1 `media/upload` (the only media
-  endpoint; OAuth 2.0 not accepted there), then tweets via v2 `/2/tweets`.
-  Reads `twitter_credentials.json` (cwd/$HOME) or falls back to parsing
-  `~/.twurlrc`. Caption in `tweet_text()`. A `401 code 89` = invalid/expired
-  OAuth token (the X free tier ended Feb 2026; writes need a paid/PPU plan).
+  correct for both endpoints). Uploads via v2 `/2/media/upload` (the v1.1
+  endpoint was retired 2025-03-31; OAuth 2.0 tokens are not accepted for media)
+  with the required `media_category=tweet_image`, then tweets via v2
+  `/2/tweets`. Reads `twitter_credentials.json` (cwd/$HOME) or falls back to
+  parsing `~/.twurlrc`. Caption in `tweet_text()` (links directly to the PDF on
+  GitHub; X has no PDF attachment). Gotcha: all four OAuth values must come from
+  the **same** app and the app must be Read+Write — a `401`/`code 89` means
+  mismatched/invalid creds; `403` means the account lacks write/credit (X free
+  tier ended Feb 2026, writes are pay-per-use).
 
 ### Conventions that matter
 

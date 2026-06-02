@@ -62,23 +62,31 @@ cargo run --release --bin datacenter_chart -- --post-linkedin
 ## Post the chart to X (Twitter)
 
 `datacenter_chart --post-twitter` (alias `--post-x`) uploads the PNG via the
-v1.1 `media/upload` endpoint and tweets it via v2 `/2/tweets`, signed with
-OAuth 1.0a. Credentials come from `twitter_credentials.json` (cwd or `$HOME`):
+v2 `/2/media/upload` endpoint and tweets it via v2 `/2/tweets`, signed with
+**OAuth 1.0a** (image upload requires OAuth 1.0a — OAuth 2.0 tokens are not
+accepted). Credentials come from `twitter_credentials.json` (cwd or `$HOME`):
 
 ```json
 {"consumer_key":"...","consumer_secret":"...","token":"...","secret":"..."}
 ```
 
-If that file is absent it falls back to the first profile in `~/.twurlrc`.
+If that file is absent it falls back to the first profile in `~/.twurlrc`. All
+four values must come from the **same** app, and the app's **User
+authentication settings** must be **Read and write** (regenerate the Access
+Token *after* enabling write).
 
 ```sh
 cargo run --release --bin datacenter_chart -- --post-twitter
 # flags compose: --post-linkedin --post-twitter posts to both
 ```
 
-Note: X discontinued the free API tier in Feb 2026 — posting is pay-per-use or
-a legacy paid plan, and the credentials must have **read+write** access. A
-`401 code 89` means the OAuth token is invalid/expired (regenerate it).
+Notes:
+- X discontinued the free API tier in Feb 2026 — posting is pay-per-use (needs
+  API credit) or a legacy paid plan.
+- A `401`/`code 89` means the OAuth credentials are invalid or the four values
+  are from different apps; a `403` means the account/plan lacks write or credit.
+- X accepts only **images/video** — not PDFs. The PDF lives in the repo and is
+  referenced by link in the post text.
 
 ## Data sources & caveats
 
