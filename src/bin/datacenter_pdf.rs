@@ -544,9 +544,10 @@ fn main() {
     }
     // Footnotes
     let f2 = s_top + s_table_h + 16.0;
-    pdf.line(MARGIN_X, by(f2), "Capex = purchases of property & equipment (cash-flow statement). Microsoft FY ends June; others December. Alphabet & Meta PP&E include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 11.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 22.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30; Amazon, Alphabet & Meta end December 31). Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2 + 11.0), "PP&E (property, plant & equipment), net = book value of long-lived physical assets (land, buildings, servers, network gear) after depreciation; Alphabet & Meta include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2 + 22.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2 + 33.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
 
     let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
