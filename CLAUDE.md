@@ -24,8 +24,16 @@ cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, the
 # X/Twitter (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
 cargo run --release --bin datacenter_chart -- --post-sec       # render PDF page 2 -> png/sec_financials.png, post to both
+cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 3 PDF pages -> png/pdf_page-{1,2,3}.png, post as ONE multi-image post to LinkedIn + X
+cargo run --release --bin datacenter_chart -- --post-pdf-x     # same but X only
 cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 ```
+
+`--post-pdf` posts to LinkedIn (`multiImage`) and best-effort to X; it still
+succeeds if LinkedIn posts even when X fails. NB: X pay-per-use accounts
+currently `403` on `POST /2/tweets` (the *tweet create* call) even with credit,
+Read+Write keys, and the app in a Project — while `POST /2/media/upload`
+succeeds. This is an X platform-side issue (mid-2026), not creds/code.
 
 There is no test suite. Verify changes by rendering and inspecting the output
 (e.g. `feh png/datacenter_capacity.png`, or rasterize the PDF with
@@ -65,6 +73,10 @@ applied in both files:
   `--post-linkedin` posts `png/datacenter_capacity.png` (Images API →
   Posts API). The caption lives in `caption()` and must be passed through
   `escape_little_text` (LinkedIn truncates on unescaped control chars).
+  `publish_images(paths, commentary, title)` posts several PNGs as one post:
+  `content.media` for a single image, `content.multiImage` (2–20 images, each
+  with `altText`) for more; `publish_image` delegates to it. The shared
+  `upload_image` helper does initializeUpload → PUT.
 - `src/twitter.rs` — X/Twitter image posting, used only by `datacenter_chart`
   (`--post-twitter` / `--post-x`). Hand-rolled OAuth 1.0a (HMAC-SHA1; only the
   oauth_* params are signed — multipart and JSON bodies are excluded, which is
@@ -76,8 +88,12 @@ applied in both files:
   `chart_caption()` is the default (links directly to the PDF on GitHub; X has no
   PDF attachment). `--post-sec` (in `main.rs`) shells out to `pdftoppm` to
   rasterize PDF page 2 → `png/sec_financials.png` and posts it to both networks
-  with an SEC caption. `linkedin::publish_image(path, commentary, title)` is
-  likewise caption-parameterized. Gotcha: all four OAuth values must come from
+  with an SEC caption. `--post-pdf` (in `main.rs`) rasterizes all 3 PDF pages →
+  `png/pdf_page-{1,2,3}.png` and posts them as ONE multi-image post via
+  `twitter::publish_images(paths, caption)` (shared `upload_media` +
+  `create_tweet` helpers; up to 4 images) and `linkedin::publish_images`.
+  `linkedin::publish_image(path, commentary, title)` is likewise
+  caption-parameterized. Gotcha: all four OAuth values must come from
   the **same** app and the app must be Read+Write — a `401`/`code 89` means
   mismatched/invalid creds; `403` means the account lacks write/credit (X free
   tier ended Feb 2026, writes are pay-per-use).

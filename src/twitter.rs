@@ -171,16 +171,13 @@ pub fn delete_tweet(id: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Upload `png_path` and post a tweet with it, using `caption` text.
-/// Returns the tweet URL.
-pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn Error>> {
-    let creds = load_creds()?;
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
-        .build()?;
-
-    // Step 1 — upload media (v2 media/upload, multipart, OAuth 1.0a).
-    // (v1.1 upload.twitter.com was retired on 2025-03-31.)
+/// Upload one PNG via the v2 `/2/media/upload` endpoint (multipart, OAuth
+/// 1.0a; v1.1 upload.twitter.com was retired 2025-03-31). Returns the media id.
+fn upload_media(
+    client: &reqwest::blocking::Client,
+    creds: &Creds,
+    png_path: &Path,
+) -> Result<String, Box<dyn Error>> {
     let upload_url = "https://api.twitter.com/2/media/upload";
     let bytes = fs::read(png_path)?;
     eprintln!(
@@ -188,18 +185,23 @@ pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn E
         png_path.display(),
         bytes.len() as f64 / 1024.0
     );
+    let fname = png_path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("image.png")
+        .to_string();
     let form = reqwest::blocking::multipart::Form::new()
         .text("media_category", "tweet_image")
         .text("media_type", "image/png")
         .part(
             "media",
             reqwest::blocking::multipart::Part::bytes(bytes)
-                .file_name("datacenter_capacity.png")
+                .file_name(fname)
                 .mime_str("image/png")?,
         );
     let resp = client
         .post(upload_url)
-        .header("Authorization", auth_header(&creds, "POST", upload_url))
+        .header("Authorization", auth_header(creds, "POST", upload_url))
         .multipart(form)
         .send()?;
     let status = resp.status();
@@ -216,16 +218,25 @@ pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn E
         .ok_or_else(|| format!("no media id in upload response: {text}"))?
         .to_string();
     eprintln!("[twitter] media_id: {media_id}");
+    Ok(media_id)
+}
 
-    // Step 2 — create tweet (v2, JSON, OAuth 1.0a).
+/// Create a tweet with `caption` and the given media ids (v2, JSON, OAuth
+/// 1.0a). Returns the tweet URL.
+fn create_tweet(
+    client: &reqwest::blocking::Client,
+    creds: &Creds,
+    caption: &str,
+    media_ids: &[String],
+) -> Result<String, Box<dyn Error>> {
     let tweets_url = "https://api.twitter.com/2/tweets";
     let body = serde_json::json!({
         "text": caption,
-        "media": { "media_ids": [media_id] }
+        "media": { "media_ids": media_ids }
     });
     let resp = client
         .post(tweets_url)
-        .header("Authorization", auth_header(&creds, "POST", tweets_url))
+        .header("Authorization", auth_header(creds, "POST", tweets_url))
         .header("Content-Type", "application/json")
         .json(&body)
         .send()?;
@@ -239,4 +250,31 @@ pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn E
     let url = format!("https://x.com/i/web/status/{id}");
     eprintln!("[twitter] Published: {url}");
     Ok(url)
+}
+
+/// Upload `png_path` and post a tweet with it, using `caption` text.
+/// Returns the tweet URL.
+pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn Error>> {
+    publish_images(&[png_path], caption)
+}
+
+/// Upload several PNGs and post them in a single tweet (X allows up to 4
+/// images per post). Order is preserved. Returns the tweet URL.
+pub fn publish_images(png_paths: &[&Path], caption: &str) -> Result<String, Box<dyn Error>> {
+    if png_paths.is_empty() {
+        return Err("no images to post".into());
+    }
+    if png_paths.len() > 4 {
+        return Err(format!("X allows at most 4 images per post (got {})", png_paths.len()).into());
+    }
+    let creds = load_creds()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(180))
+        .build()?;
+
+    let mut media_ids = Vec::with_capacity(png_paths.len());
+    for path in png_paths {
+        media_ids.push(upload_media(&client, &creds, path)?);
+    }
+    create_tweet(&client, &creds, caption, &media_ids)
 }

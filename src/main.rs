@@ -109,6 +109,54 @@ fn main() {
         return;
     }
 
+    // `--post-pdf`: rasterize all three PDF pages to PNGs and post them as a
+    // single multi-image post — to LinkedIn (multiImage) and, best-effort, to X
+    // (which currently 403s on pay-per-use writes). Always links to the full
+    // PDF on GitHub. `--post-pdf-x` restricts to X only; default does both.
+    if args.iter().any(|a| a == "--post-pdf" || a == "--post-pdf-x") {
+        let x_only = args.iter().any(|a| a == "--post-pdf-x");
+        let pages = ["png/pdf_page-1.png", "png/pdf_page-2.png", "png/pdf_page-3.png"];
+        let rendered = std::process::Command::new("pdftoppm")
+            .args([
+                "-png", "-r", "200",
+                "pdf/datacenter_sources.pdf", "png/pdf_page",
+            ])
+            .status();
+        match rendered {
+            Ok(s) if s.success() => println!("Rendered {} PDF pages", pages.len()),
+            _ => {
+                eprintln!("Failed to rasterize the PDF (need `pdftoppm` and pdf/datacenter_sources.pdf)");
+                std::process::exit(1);
+            }
+        }
+        let paths: Vec<&std::path::Path> = pages.iter().map(|p| std::path::Path::new(*p)).collect();
+        let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
+        let caption = format!(
+            "AI data-center buildout in three views — the full clickable PDF (every figure links to its SEC 10-K) is on GitHub:\n\n\
+            1/ Power capacity (GW), operational vs. planned, with FY2025 capex & est. $/GW — Amazon, Microsoft, Google, Meta, xAI, OpenAI, Anthropic.\n\
+            2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\" — plus where the capital actually sits (compute/servers vs. real estate), straight from each property & equipment note.\n\
+            3/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land. It's why xAI's plant looks cheap — they cut the facility cost, but GPUs still dominate the all-in.\n\n\
+            Full PDF: {pdf_url}\n\
+            #AI #DataCenters #CapEx #SEC"
+        );
+        let title = "AI Data-Center Capacity & SEC Financials";
+        let mut ok = false;
+        if !x_only {
+            match linkedin::publish_images(&paths, &caption, title) {
+                Ok(u) => { println!("Posted all 3 PDF pages to LinkedIn: {u}"); ok = true; }
+                Err(e) => eprintln!("[linkedin] post failed: {e}"),
+            }
+        }
+        match twitter::publish_images(&paths, &caption) {
+            Ok(u) => { println!("Posted all 3 PDF pages to X: {u}"); ok = true; }
+            Err(e) => eprintln!("[twitter] post failed: {e}"),
+        }
+        if !ok {
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let post_linkedin = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
     let post_twitter = args.iter().any(|a| a == "--post-twitter" || a == "--post-x");
 

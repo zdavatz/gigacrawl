@@ -98,11 +98,31 @@ to **both** LinkedIn and X with an SEC-specific caption:
 cargo run --release --bin datacenter_chart -- --post-sec   # needs pdftoppm + the PDF
 ```
 
+### Post all three PDF pages
+
+`--post-pdf` rasterizes **all three** PDF pages (`pdftoppm -r 200` →
+`png/pdf_page-{1,2,3}.png`) and publishes them as a **single multi-image post**
+to **LinkedIn** (`multiImage`) and, best-effort, to **X** (up to 4 images). The
+caption always links to the full clickable PDF on GitHub. `--post-pdf-x`
+restricts to X only.
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-pdf     # LinkedIn + X
+cargo run --release --bin datacenter_chart -- --post-pdf-x   # X only
+```
+
 Notes:
 - X discontinued the free API tier in Feb 2026 — posting is pay-per-use (needs
   API credit) or a legacy paid plan.
 - A `401`/`code 89` means the OAuth credentials are invalid or the four values
   are from different apps; a `403` means the account/plan lacks write or credit.
+- **Pay-per-use `POST /2/tweets` 403:** as of mid-2026 X pay-per-use accounts
+  can hit `403 "You are not permitted to perform this action"` on the *tweet
+  create* call even with credit, correct Read+Write keys, and the app attached
+  to a Project — while `POST /2/media/upload` still succeeds. This is an X
+  platform-side issue (widely reported on the developer forum), not a
+  credential or code problem; `--post-pdf` therefore treats X as best-effort and
+  still succeeds if LinkedIn posts.
 - X accepts only **images/video** — not PDFs. The PDF lives in the repo and is
   referenced by link in the post text.
 

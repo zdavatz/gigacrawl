@@ -266,23 +266,14 @@ pub fn chart_caption() -> String {
         .to_string()
 }
 
-/// Upload `png_path` to LinkedIn as a public image post with `commentary`
-/// text and image `title`.
-pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<String, Box<dyn Error>> {
-    let (creds_path, creds) = load_credentials()?;
-    eprintln!("[linkedin] Using credentials: {}", creds_path.display());
-    let (token_path, token) = load_token()?;
-    if token.person_id.is_empty() {
-        return Err("linkedin_token.json has empty person_id (run --auth)".into());
-    }
-
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
-        .build()?;
-    let token = refresh_token(&client, &creds, &token, &token_path);
-
-    let owner = format!("urn:li:person:{}", token.person_id);
-    let auth = format!("Bearer {}", token.access_token);
+/// Upload one PNG to LinkedIn (initializeUpload → PUT bytes). Returns the
+/// image URN to attach to a post.
+fn upload_image(
+    client: &reqwest::blocking::Client,
+    auth: &str,
+    owner: &str,
+    png_path: &Path,
+) -> Result<String, Box<dyn Error>> {
     let bytes = fs::read(png_path)?;
     eprintln!(
         "[linkedin] Uploading {} ({:.1} KB)",
@@ -293,7 +284,7 @@ pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<S
     // Step 1 — initialize image upload
     let init_resp = client
         .post("https://api.linkedin.com/rest/images?action=initializeUpload")
-        .header("Authorization", &auth)
+        .header("Authorization", auth)
         .header("Content-Type", "application/json")
         .header("LinkedIn-Version", LINKEDIN_VERSION)
         .header("X-Restli-Protocol-Version", "2.0.0")
@@ -318,7 +309,7 @@ pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<S
     // Step 2 — PUT the bytes
     let put_resp = client
         .put(&upload_url)
-        .header("Authorization", &auth)
+        .header("Authorization", auth)
         .header("Content-Type", "application/octet-stream")
         .body(bytes)
         .send()?;
@@ -327,8 +318,30 @@ pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<S
         return Err(format!("image PUT failed ({s}): {}", put_resp.text().unwrap_or_default()).into());
     }
     eprintln!("[linkedin] Image uploaded: {}", image_urn);
+    Ok(image_urn)
+}
 
-    // Step 3 — create the post
+/// Create a post (single `media` for one image, `multiImage` for several) and
+/// return its feed URL.
+fn create_post(
+    client: &reqwest::blocking::Client,
+    auth: &str,
+    owner: &str,
+    commentary: &str,
+    title: &str,
+    image_urns: &[String],
+) -> Result<String, Box<dyn Error>> {
+    let content = if image_urns.len() == 1 {
+        serde_json::json!({ "media": { "title": title, "id": image_urns[0] } })
+    } else {
+        // multiImage requires 2–20 images, each with alt text.
+        let images: Vec<serde_json::Value> = image_urns
+            .iter()
+            .enumerate()
+            .map(|(i, urn)| serde_json::json!({ "id": urn, "altText": format!("{title} — page {}", i + 1) }))
+            .collect();
+        serde_json::json!({ "multiImage": { "images": images } })
+    };
     let post_body = serde_json::json!({
         "author": owner,
         "commentary": escape_little_text(commentary),
@@ -338,13 +351,13 @@ pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<S
             "targetEntities": [],
             "thirdPartyDistributionChannels": []
         },
-        "content": { "media": { "title": title, "id": image_urn } },
+        "content": content,
         "lifecycleState": "PUBLISHED",
         "isReshareDisabledByAuthor": false
     });
     let post_resp = client
         .post("https://api.linkedin.com/rest/posts")
-        .header("Authorization", &auth)
+        .header("Authorization", auth)
         .header("Content-Type", "application/json")
         .header("LinkedIn-Version", LINKEDIN_VERSION)
         .header("X-Restli-Protocol-Version", "2.0.0")
@@ -363,4 +376,41 @@ pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<S
     let url = format!("https://www.linkedin.com/feed/update/{post_id}/");
     eprintln!("[linkedin] Published: {url}");
     Ok(url)
+}
+
+/// Upload `png_path` to LinkedIn as a public image post with `commentary`
+/// text and image `title`.
+pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<String, Box<dyn Error>> {
+    publish_images(&[png_path], commentary, title)
+}
+
+/// Upload several PNGs and publish them in a single multi-image post
+/// (LinkedIn allows 2–20 images). Order is preserved. Returns the post URL.
+pub fn publish_images(png_paths: &[&Path], commentary: &str, title: &str) -> Result<String, Box<dyn Error>> {
+    if png_paths.is_empty() {
+        return Err("no images to post".into());
+    }
+    if png_paths.len() > 20 {
+        return Err(format!("LinkedIn allows at most 20 images per post (got {})", png_paths.len()).into());
+    }
+    let (creds_path, creds) = load_credentials()?;
+    eprintln!("[linkedin] Using credentials: {}", creds_path.display());
+    let (token_path, token) = load_token()?;
+    if token.person_id.is_empty() {
+        return Err("linkedin_token.json has empty person_id (run --auth)".into());
+    }
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(180))
+        .build()?;
+    let token = refresh_token(&client, &creds, &token, &token_path);
+
+    let owner = format!("urn:li:person:{}", token.person_id);
+    let auth = format!("Bearer {}", token.access_token);
+
+    let mut image_urns = Vec::with_capacity(png_paths.len());
+    for path in png_paths {
+        image_urns.push(upload_image(&client, &auth, &owner, path)?);
+    }
+    create_post(&client, &auth, &owner, commentary, title, &image_urns)
 }
