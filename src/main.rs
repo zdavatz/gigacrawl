@@ -63,6 +63,19 @@ fn main() {
         }
         return;
     }
+    if let Some(i) = args.iter().position(|a| a == "--delete-tweet") {
+        let id = args.get(i + 1).cloned().unwrap_or_default();
+        if id.is_empty() {
+            eprintln!("--delete-tweet requires a tweet ID");
+            std::process::exit(1);
+        }
+        if let Err(e) = twitter::delete_tweet(&id) {
+            eprintln!("[twitter] delete failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let post_linkedin = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
     let post_twitter = args.iter().any(|a| a == "--post-twitter" || a == "--post-x");
 

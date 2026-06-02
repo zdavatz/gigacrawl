@@ -150,6 +150,26 @@ fn tweet_text() -> String {
         .to_string()
 }
 
+/// Delete a tweet by ID (DELETE /2/tweets/:id, OAuth 1.0a).
+pub fn delete_tweet(id: &str) -> Result<(), Box<dyn Error>> {
+    let creds = load_creds()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()?;
+    let url = format!("https://api.twitter.com/2/tweets/{id}");
+    let resp = client
+        .delete(&url)
+        .header("Authorization", auth_header(&creds, "DELETE", &url))
+        .send()?;
+    let status = resp.status();
+    let text = resp.text()?;
+    if !status.is_success() {
+        return Err(format!("delete tweet failed ({status}): {text}").into());
+    }
+    eprintln!("[twitter] Deleted tweet {id}: {text}");
+    Ok(())
+}
+
 /// Upload `png_path` and post a tweet with it. Returns the tweet URL.
 pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
     let creds = load_creds()?;
