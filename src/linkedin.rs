@@ -252,7 +252,8 @@ fn escape_little_text(s: &str) -> String {
     out
 }
 
-fn caption() -> String {
+/// Default caption for the main capacity chart.
+pub fn chart_caption() -> String {
     "Data center power capacity (GW) — operational vs. planned, with FY2025 capex from SEC 10-K filings.\n\
      \n\
      Compared: Amazon (AWS ~10–15+ GW, $128.3B capex), Microsoft (Azure ~5–8+ GW, $64.6B), Google ($91.4B), Meta ($69.7B), xAI (~2 GW, Colossus), OpenAI (Stargate ~10 GW target), Anthropic ($50B plan).\n\
@@ -265,8 +266,9 @@ fn caption() -> String {
         .to_string()
 }
 
-/// Upload `png_path` to LinkedIn as a public image post.
-pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
+/// Upload `png_path` to LinkedIn as a public image post with `commentary`
+/// text and image `title`.
+pub fn publish_image(png_path: &Path, commentary: &str, title: &str) -> Result<String, Box<dyn Error>> {
     let (creds_path, creds) = load_credentials()?;
     eprintln!("[linkedin] Using credentials: {}", creds_path.display());
     let (token_path, token) = load_token()?;
@@ -329,14 +331,14 @@ pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
     // Step 3 — create the post
     let post_body = serde_json::json!({
         "author": owner,
-        "commentary": escape_little_text(&caption()),
+        "commentary": escape_little_text(commentary),
         "visibility": "PUBLIC",
         "distribution": {
             "feedDistribution": "MAIN_FEED",
             "targetEntities": [],
             "thirdPartyDistributionChannels": []
         },
-        "content": { "media": { "title": "Data Center Power Capacity (GW)", "id": image_urn } },
+        "content": { "media": { "title": title, "id": image_urn } },
         "lifecycleState": "PUBLISHED",
         "isReshareDisabledByAuthor": false
     });

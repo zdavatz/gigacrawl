@@ -23,6 +23,8 @@ cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, the
 
 # X/Twitter (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
+cargo run --release --bin datacenter_chart -- --post-sec       # render PDF page 2 -> png/sec_financials.png, post to both
+cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 ```
 
 There is no test suite. Verify changes by rendering and inspecting the output
@@ -61,8 +63,12 @@ applied in both files:
   endpoint was retired 2025-03-31; OAuth 2.0 tokens are not accepted for media)
   with the required `media_category=tweet_image`, then tweets via v2
   `/2/tweets`. Reads `twitter_credentials.json` (cwd/$HOME) or falls back to
-  parsing `~/.twurlrc`. Caption in `tweet_text()` (links directly to the PDF on
-  GitHub; X has no PDF attachment). Gotcha: all four OAuth values must come from
+  parsing `~/.twurlrc`. `publish_image(path, caption)` takes the caption;
+  `chart_caption()` is the default (links directly to the PDF on GitHub; X has no
+  PDF attachment). `--post-sec` (in `main.rs`) shells out to `pdftoppm` to
+  rasterize PDF page 2 → `png/sec_financials.png` and posts it to both networks
+  with an SEC caption. `linkedin::publish_image(path, commentary, title)` is
+  likewise caption-parameterized. Gotcha: all four OAuth values must come from
   the **same** app and the app must be Read+Write — a `401`/`code 89` means
   mismatched/invalid creds; `403` means the account lacks write/credit (X free
   tier ended Feb 2026, writes are pay-per-use).

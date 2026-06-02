@@ -10,10 +10,13 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 
 - [`png/datacenter_capacity.png`](png/datacenter_capacity.png) — the chart as a
   styled table (title, header band, alternating rows, wrapped cells).
-- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — the same table in
-  A4 landscape, where each row's **Capex** cell carries a clickable source link:
-  public companies link to their FY2025 **10-K on sec.gov**; private companies
-  (xAI, OpenAI, Anthropic) link to their primary public announcement.
+- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **2 pages**, A4
+  landscape: (1) the same table, where each row's **Capex** cell carries a
+  clickable source link (public → FY2025 **10-K on sec.gov**; private → primary
+  announcement); (2) a **SEC financials** page (capex FY23–25, PP&E, operating
+  cash flow, capex÷OCF, leases-not-yet-commenced), each row linked to its 10-K.
+- `png/sec_financials.png` — page 2 rasterized for social posting (generated on
+  demand by `--post-sec`).
 
 Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, xAI, OpenAI,
 Anthropic — ordered by estimated operational GW.
@@ -78,6 +81,16 @@ Token *after* enabling write).
 ```sh
 cargo run --release --bin datacenter_chart -- --post-twitter
 # flags compose: --post-linkedin --post-twitter posts to both
+```
+
+### Post the SEC financials page
+
+`--post-sec` rasterizes **page 2** of `pdf/datacenter_sources.pdf` (the SEC
+10-K financials table) to `png/sec_financials.png` (via `pdftoppm`) and posts it
+to **both** LinkedIn and X with an SEC-specific caption:
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-sec   # needs pdftoppm + the PDF
 ```
 
 Notes:

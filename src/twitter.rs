@@ -142,7 +142,8 @@ fn auth_header(creds: &Creds, method: &str, url: &str) -> String {
     format!("OAuth {}", inner)
 }
 
-fn tweet_text() -> String {
+/// Default caption for the main capacity chart.
+pub fn chart_caption() -> String {
     "Data center power capacity (GW): operational vs. planned, with FY2025 capex from SEC 10-Ks — \
      Amazon, Microsoft, Google, Meta, xAI, OpenAI, Anthropic.\n\
      Clickable PDF (each figure links to its 10-K): github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n\
@@ -170,8 +171,9 @@ pub fn delete_tweet(id: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Upload `png_path` and post a tweet with it. Returns the tweet URL.
-pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
+/// Upload `png_path` and post a tweet with it, using `caption` text.
+/// Returns the tweet URL.
+pub fn publish_image(png_path: &Path, caption: &str) -> Result<String, Box<dyn Error>> {
     let creds = load_creds()?;
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
@@ -218,7 +220,7 @@ pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
     // Step 2 — create tweet (v2, JSON, OAuth 1.0a).
     let tweets_url = "https://api.twitter.com/2/tweets";
     let body = serde_json::json!({
-        "text": tweet_text(),
+        "text": caption,
         "media": { "media_ids": [media_id] }
     });
     let resp = client

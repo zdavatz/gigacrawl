@@ -77,6 +77,38 @@ fn main() {
         return;
     }
 
+    // `--post-sec`: render page 2 of the PDF (the SEC financials table) to a PNG
+    // and post it to LinkedIn + X with an SEC-specific caption.
+    if args.iter().any(|a| a == "--post-sec") {
+        let sec_png = "png/sec_financials.png";
+        let rendered = std::process::Command::new("pdftoppm")
+            .args([
+                "-png", "-r", "200", "-f", "2", "-l", "2", "-singlefile",
+                "pdf/datacenter_sources.pdf", "png/sec_financials",
+            ])
+            .status();
+        match rendered {
+            Ok(s) if s.success() => println!("Rendered {sec_png}"),
+            _ => {
+                eprintln!("Failed to render page 2 (need `pdftoppm` and pdf/datacenter_sources.pdf)");
+                std::process::exit(1);
+            }
+        }
+        let path = std::path::Path::new(sec_png);
+        let li_caption = "How much are the AI hyperscalers actually spending? Straight from the FY2025 SEC 10-Ks:\n\nFY2025 capex — Amazon $131.8B, Alphabet $91.4B, Meta $69.7B, Microsoft $64.6B.\nAlso PP&E (net), operating cash flow, capex÷OCF, and \"leases not yet commenced\" (mostly data centers): Amazon $96.4B, Microsoft $92.7B, Meta $103.8B, Alphabet $58.5B.\n\nEvery figure links to the underlying 10-K on sec.gov. Full clickable PDF:\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #DataCenters #CapEx #SEC #CloudInfrastructure";
+        let tw_caption = "FY2025 AI data-center capex from the SEC 10-Ks: Amazon $131.8B · Alphabet $91.4B · Meta $69.7B · Microsoft $64.6B. Plus PP&E, operating cash flow & \"leases not yet commenced\" — each figure links to its filing.\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #SEC #CapEx";
+        let title = "AI Data-Center Capex — FY2025 SEC 10-K Financials";
+        match linkedin::publish_image(path, li_caption, title) {
+            Ok(u) => println!("Posted SEC page to LinkedIn: {u}"),
+            Err(e) => eprintln!("[linkedin] post failed: {e}"),
+        }
+        match twitter::publish_image(path, tw_caption) {
+            Ok(u) => println!("Posted SEC page to X: {u}"),
+            Err(e) => eprintln!("[twitter] post failed: {e}"),
+        }
+        return;
+    }
+
     let post_linkedin = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
     let post_twitter = args.iter().any(|a| a == "--post-twitter" || a == "--post-x");
 
@@ -446,7 +478,11 @@ fn main() {
     println!("Wrote {} ({}x{})", out, img_w, img_h);
 
     if post_linkedin {
-        match linkedin::publish_image(std::path::Path::new(out)) {
+        match linkedin::publish_image(
+            std::path::Path::new(out),
+            &linkedin::chart_caption(),
+            "Data Center Power Capacity (GW)",
+        ) {
             Ok(url) => println!("Posted to LinkedIn: {url}"),
             Err(e) => {
                 eprintln!("[linkedin] post failed: {e}");
@@ -455,7 +491,7 @@ fn main() {
         }
     }
     if post_twitter {
-        match twitter::publish_image(std::path::Path::new(out)) {
+        match twitter::publish_image(std::path::Path::new(out), &twitter::chart_caption()) {
             Ok(url) => println!("Posted to X: {url}"),
             Err(e) => {
                 eprintln!("[twitter] post failed: {e}");
