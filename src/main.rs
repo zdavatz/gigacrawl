@@ -1,6 +1,8 @@
 use ab_glyph::{Font, FontRef, Glyph, PxScale, ScaleFont};
 use image::{Rgba, RgbaImage};
 
+mod linkedin;
+
 // ---- Font handles (DejaVu Sans available on this system) ----
 const FONT_REGULAR: &[u8] = include_bytes!("/usr/share/fonts/dejavu/DejaVuSans.ttf");
 const FONT_BOLD: &[u8] = include_bytes!("/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf");
@@ -50,6 +52,18 @@ impl Cell {
 const NCOL: usize = 6;
 
 fn main() {
+    // CLI: `--auth` runs the LinkedIn OAuth flow; `--post-linkedin` posts the
+    // rendered chart after generating it. No flag = just render the PNG.
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.iter().any(|a| a == "--auth") {
+        if let Err(e) = linkedin::authenticate() {
+            eprintln!("[linkedin] auth failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+    let post = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
+
     let fonts = Fonts {
         regular: FontRef::try_from_slice(FONT_REGULAR).expect("regular font"),
         bold: FontRef::try_from_slice(FONT_BOLD).expect("bold font"),
@@ -405,6 +419,16 @@ fn main() {
     let out = "png/datacenter_capacity.png";
     img.save(out).expect("save png");
     println!("Wrote {} ({}x{})", out, img_w, img_h);
+
+    if post {
+        match linkedin::publish_image(std::path::Path::new(out)) {
+            Ok(url) => println!("Posted to LinkedIn: {url}"),
+            Err(e) => {
+                eprintln!("[linkedin] post failed: {e}");
+                std::process::exit(1);
+            }
+        }
+    }
 }
 
 // ---- Text wrapping ----

@@ -16,6 +16,10 @@ figures sourced from SEC 10-K filings. Two outputs: a PNG chart and a linked PDF
 cargo run --release --bin datacenter_chart   # -> png/datacenter_capacity.png
 cargo run --release --bin datacenter_pdf      # -> pdf/datacenter_sources.pdf
 cargo build --release                         # build both binaries
+
+# LinkedIn (datacenter_chart only):
+cargo run --release --bin datacenter_chart -- --auth           # OAuth, writes linkedin_token.json
+cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, then post it
 ```
 
 There is no test suite. Verify changes by rendering and inspecting the output
@@ -37,6 +41,16 @@ applied in both files:
   filled header/row rectangles (`Op::DrawPolygon` with `PaintMode::Fill` —
   note `Op::DrawRectangle` does **not** fill in 0.9), grid lines, and per-row
   source hyperlinks (`Op::LinkAnnotation` with `Actions::Uri`).
+- `src/linkedin.rs` — LinkedIn OAuth + image publishing, used only by
+  `datacenter_chart` (via `mod linkedin;`). Self-contained: blocking `reqwest`
+  + a `std::net::TcpListener` callback server on port 8092 (no tokio). Uses
+  gigacrawl's **own** app credentials (`linkedin_credentials.json` /
+  `linkedin_token.json`, looked up in cwd then `$HOME`, both gitignored) so it
+  does not share/rotate tokens with sibling projects. The token rotates on
+  refresh and is persisted back. `--auth` runs the authorization-code flow;
+  `--post-linkedin` posts `png/datacenter_capacity.png` (Images API →
+  Posts API). The caption lives in `caption()` and must be passed through
+  `escape_little_text` (LinkedIn truncates on unescaped control chars).
 
 ### Conventions that matter
 

@@ -31,6 +31,34 @@ cargo run --release --bin datacenter_chart
 cargo run --release --bin datacenter_pdf
 ```
 
+## Post the chart to LinkedIn
+
+`datacenter_chart` can publish the rendered PNG to LinkedIn. It uses **its own**
+LinkedIn app credentials (kept separate from other projects so tokens don't
+collide), read from `linkedin_credentials.json` / `linkedin_token.json` in the
+current directory or `$HOME` (both gitignored).
+
+One-time setup:
+
+1. Create a LinkedIn app at <https://www.linkedin.com/developers/>. Add the
+   products **"Sign In with LinkedIn using OpenID Connect"** and
+   **"Share on LinkedIn"**, and add the redirect URL
+   `http://localhost:8092/callback`.
+2. Save the app keys to `linkedin_credentials.json`:
+   ```json
+   {"client_id": "...", "client_secret": "..."}
+   ```
+3. Authorize (opens a browser, writes `linkedin_token.json`):
+   ```sh
+   cargo run --release --bin datacenter_chart -- --auth
+   ```
+
+Then render **and** post in one step:
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-linkedin
+```
+
 ## Data sources & caveats
 
 - **Capex / PP&E** come from each company's latest annual **10-K** (via SEC
