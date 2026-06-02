@@ -157,6 +157,7 @@ impl<'a> Pdf<'a> {
 
 struct Row {
     company: &'static str,
+    cost_gw: &'static str,
     operational: &'static str,
     planned: &'static str,
     capex: &'static str,
@@ -164,6 +165,19 @@ struct Row {
     links: &'static [(&'static str, &'static str)],
     sites: &'static str,
     notes: &'static str,
+}
+
+/// One public company's audited FY2025 10-K figures (page 2).
+struct Sec {
+    company: &'static str,
+    capex23: &'static str,
+    capex24: &'static str,
+    capex25: &'static str,
+    ppe: &'static str,
+    ocf: &'static str,
+    ratio: &'static str,
+    leases: &'static str,
+    url: &'static str,
 }
 
 const AMZN: &str = "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm";
@@ -211,10 +225,11 @@ fn main() {
         "Operational (GW)",
         "Planned / Under Construction",
         "FY2025 Capex (10-K)",
+        "Est. $/GW (flagship)",
         "Key Sites & Power (location · GW)",
         "Key Notes",
     ];
-    let col_w = [80.0f32, 92.0, 118.0, 80.0, 208.0, 208.0]; // sum = 786
+    let col_w = [72.0f32, 84.0, 110.0, 64.0, 78.0, 189.0, 189.0]; // sum = 786
     let table_w: f32 = col_w.iter().sum();
     let table_x = (PAGE_W - table_w) / 2.0;
 
@@ -224,8 +239,9 @@ fn main() {
             operational: "~10–15+ GW (global est.)",
             planned: "Multi-GW additions ongoing (on track to ~2× capacity by 2027)",
             capex: "$128.3B",
+            cost_gw: "~$5–6B/GW (facility)",
             links: &[("10-K ↗", AMZN)],
-            sites: "New Carlisle, IN ($11–15B; ~2.4 GW added in region) · N. Virginia (~2.75 GW; $35B through 2040)",
+            sites: "New Carlisle, IN ($11–15B; ~2.4 GW; ~500k AWS Trainium2 — Project Rainier) · N. Virginia (~2.75 GW; $35B through 2040)",
             notes: "Added 3.8 GW in past 12 mo. 2.2 GW Indiana campus partly operational. 10-K: capex expected to increase in 2026.",
         },
         Row {
@@ -233,8 +249,9 @@ fn main() {
             operational: "~5–8+ GW (global est.)",
             planned: "Large pipeline (multi-GW projects)",
             capex: "$64.6B",
+            cost_gw: "~$8B/GW (facility)",
             links: &[("10-K ↗", MSFT)],
-            sites: "Fairwater — Wisconsin (~$7.3B; ~0.9 GW, online early 2026) · Atlanta (online) · Fairwater 4 (under constr.)",
+            sites: "Fairwater — Wisconsin (~$7.3B; ~0.9 GW, early 2026) · Atlanta (online; GB300 NVL72, Blackwell Ultra) · Fairwater 4 (constr.)",
             notes: "Added ~2 GW FY2025 + ~1 GW Q2 FY2026. FY ends June. 10-K: will continue to invest in AI infrastructure.",
         },
         Row {
@@ -242,8 +259,9 @@ fn main() {
             operational: "Several GW (global est.)",
             planned: "Significant expansions (e.g., 1 GW+ demand-response deals)",
             capex: "$91.4B",
+            cost_gw: "— (n/d)",
             links: &[("10-K ↗", GOOG), ("FWP ↗", GOOG_FWP)],
-            sites: "Global fleet. $52.7B of long-term data-center leases signed but not yet commenced (10-K)",
+            sites: "Global fleet (TPU v7 Ironwood + Nvidia). $52.7B of long-term data-center leases signed but not yet commenced (10-K)",
             notes: "10-K: expects to significantly increase 2026 technical-infra spend. AI-infra financing: $80B equity raise (Jun 2026, incl. $10B Berkshire) — see FWP.",
         },
         Row {
@@ -251,8 +269,9 @@ fn main() {
             operational: "Several GW operational",
             planned: "Prometheus ~1 GW (2026); Hyperion →5 GW (2 GW by ~2030)",
             capex: "$69.7B",
+            cost_gw: "— (n/d)",
             links: &[("10-K ↗", META)],
-            sites: "Prometheus — New Albany, OH (~1 GW, online 2026) · Hyperion — Richland Parish, LA (→5 GW; $27B Blue Owl JV)",
+            sites: "Prometheus — New Albany, OH (~1 GW, 2026; Blackwell GB200/GB300) · Hyperion — Richland Parish, LA (→5 GW; $27B Blue Owl JV)",
             notes: "10-K guides FY2026 capex to ~$115–135B. Hyperion is among the largest planned campuses worldwide.",
         },
         Row {
@@ -260,8 +279,9 @@ fn main() {
             operational: "~2 GW (Colossus, Memphis)",
             planned: "Further expansions (roadmap to much larger)",
             capex: "Private",
+            cost_gw: "~$9–15B/GW (all-in)",
             links: &[("source ↗", XAI)],
-            sites: "Memphis, TN — Colossus 1 (~0.3 GW) + Colossus 2 (~1.2 → ~2 GW, 555k+ GPUs); power hub in Southaven, MS",
+            sites: "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
             notes: "Colossus 2 among first ~GW-scale single sites. Colossus 1 output leased to Anthropic ($1.25B/mo through 2029).",
         },
         Row {
@@ -269,8 +289,9 @@ fn main() {
             operational: "~0.3 GW (Stargate Abilene) + Azure",
             planned: "Stargate ~7–10 GW planned ($500B); 4.5 GW Oracle deal",
             capex: "Private",
+            cost_gw: "~$50B/GW (all-in)",
             links: &[("source ↗", OPENAI)],
-            sites: "Abilene, TX (→1.2 GW; ~0.3 GW live) · Shackelford Co., TX · Doña Ana Co., NM · Lordstown, OH · Wisconsin · UAE",
+            sites: "Abilene, TX (→1.2 GW; ~0.3 GW live; 450k GB200) · Shackelford Co., TX · Doña Ana Co., NM · Lordstown, OH · Wisconsin · UAE",
             notes: "Stargate JV with SoftBank & Oracle (+ CoreWeave). Targets ~10 GW / $500B by 2029; >3 GW added in early 2026.",
         },
         Row {
@@ -278,8 +299,9 @@ fn main() {
             operational: "Limited owned (partner access)",
             planned: "Multi-GW via partners (1+ GW coming 2026–2027)",
             capex: "Private",
+            cost_gw: "— (n/d)",
             links: &[("source ↗", ANTHROPIC)],
-            sites: "Fluidstack: Abernathy, TX (~168 MW) · Lake Mariner, NY (~360 MW). Partners: AWS, Google, Azure, xAI",
+            sites: "Fluidstack: Abernathy, TX (~168 MW) · Lake Mariner, NY (~360 MW). Partners: AWS Trainium2 (~500k→1M), Google TPU v7 (≤1M), Azure (Nvidia), xAI Colossus 1",
             notes: "$50B US infrastructure plan, sites online through 2026. Exploring multi-GW orbital compute with SpaceX.",
         },
     ];
@@ -310,13 +332,22 @@ fn main() {
     let header_h = header_lines * lh + pad_y * 2.0;
 
     // Pre-wrap each data cell; row height from the tallest cell.
-    let col_color = [company_c.clone(), ink.clone(), ink.clone(), capex_c.clone(), site_c.clone(), note_c.clone()];
-    let col_bold = [true, false, false, true, false, false];
+    let costgw_c = rgb(146, 64, 14);
+    let col_color = [
+        company_c.clone(),
+        ink.clone(),
+        ink.clone(),
+        capex_c.clone(),
+        costgw_c.clone(),
+        site_c.clone(),
+        note_c.clone(),
+    ];
+    let col_bold = [true, false, false, true, true, false, false];
 
-    let mut row_data: Vec<([Vec<String>; 6], f32)> = Vec::new();
+    let mut row_data: Vec<([Vec<String>; 7], f32)> = Vec::new();
     for r in &rows {
-        let texts = [r.company, r.operational, r.planned, r.capex, r.sites, r.notes];
-        let wrapped: [Vec<String>; 6] = std::array::from_fn(|i| {
+        let texts = [r.company, r.operational, r.planned, r.capex, r.cost_gw, r.sites, r.notes];
+        let wrapped: [Vec<String>; 7] = std::array::from_fn(|i| {
             pdf.wrap(texts[i], col_bold[i], cell, col_w[i] - pad_x * 2.0)
         });
         // capex cell also carries link lines beneath the figure.
@@ -358,7 +389,7 @@ fn main() {
     for (ri, r) in rows.iter().enumerate() {
         let (wrapped, h) = &row_data[ri];
         let mut cx = table_x;
-        for i in 0..6 {
+        for i in 0..7 {
             for (li, ln) in wrapped[i].iter().enumerate() {
                 let bl = by(ry + pad_y + cell + li as f32 * lh);
                 pdf.line(cx + pad_x, bl, ln, col_bold[i], cell, col_color[i].clone(), None);
@@ -382,10 +413,10 @@ fn main() {
     // verticals
     let mut vx = table_x;
     pdf.seg(vx, t_top, vx, t_bot, 0.8, outer.clone());
-    for i in 0..6 {
+    for i in 0..7 {
         vx += col_w[i];
-        let c = if i == 5 { outer.clone() } else { border.clone() };
-        pdf.seg(vx, t_top, vx, t_bot, if i == 5 { 0.8 } else { 0.5 }, c);
+        let c = if i == 6 { outer.clone() } else { border.clone() };
+        pdf.seg(vx, t_top, vx, t_bot, if i == 6 { 0.8 } else { 0.5 }, c);
     }
     // horizontals
     pdf.seg(table_x, t_top, table_x + table_w, t_top, 0.8, outer.clone());
@@ -399,12 +430,127 @@ fn main() {
     }
 
     // ---- Footer ----
-    let foot = table_top + table_h + 16.0;
+    let foot = table_top + table_h + 14.0;
     pdf.line(MARGIN_X, by(foot), "Capex = purchases of property & equipment (latest annual 10-K). Click a source link in the Capex column to open the filing. GW figures are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(foot + 11.0), "Est. $/GW = flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.", false, 7.2, gray.clone(), None);
+
+    // Page 1 done — capture its ops.
+    let page1 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+
+    // ===================== PAGE 2: SEC financials =====================
+    // Sorted by FY2025 capex, descending.
+    let secs = [
+        Sec { company: "Amazon (AWS)", capex23: "$52.7B", capex24: "$83.0B", capex25: "$131.8B",
+              ppe: "$357.0B  (+41%)", ocf: "$139.5B", ratio: "94%", leases: "$96.4B", url: AMZN },
+        Sec { company: "Alphabet (Google)", capex23: "$32.3B", capex24: "$52.5B", capex25: "$91.4B",
+              ppe: "$246.6B  (+44%)", ocf: "$164.7B", ratio: "56%", leases: "$58.5B", url: GOOG },
+        Sec { company: "Meta Platforms", capex23: "$27.3B", capex24: "$37.3B", capex25: "$69.7B",
+              ppe: "$176.4B  (+45%)", ocf: "$115.8B", ratio: "60%", leases: "$103.8B", url: META },
+        Sec { company: "Microsoft (Azure)", capex23: "$28.1B", capex24: "$44.5B", capex25: "$64.6B",
+              ppe: "$205.0B  (+51%)", ocf: "$136.2B", ratio: "47%", leases: "$92.7B", url: MSFT },
+    ];
+    let s_head = [
+        "Company",
+        "Capex FY23",
+        "Capex FY24",
+        "Capex FY25",
+        "PP&E net (Δ YoY)",
+        "Op. cash flow FY25",
+        "Capex ÷ OCF",
+        "Leases not yet commenced (mostly data centers)",
+        "Source",
+    ];
+    let s_w = [96.0f32, 66.0, 66.0, 74.0, 96.0, 84.0, 60.0, 156.0, 88.0]; // 786
+    let s_color = [
+        company_c.clone(), ink.clone(), ink.clone(), capex_c.clone(), ink.clone(),
+        ink.clone(), capex_c.clone(), site_c.clone(), link_c.clone(),
+    ];
+    let s_bold = [true, false, false, true, true, false, true, false, true];
+    let s_x = (PAGE_W - s_w.iter().sum::<f32>()) / 2.0;
+
+    let mut t2 = 24.0f32;
+    pdf.line(MARGIN_X, by(t2), "FY2025 SEC 10-K Financials — AI Data-Center Capex & Commitments", true, 15.0, title_c.clone(), None);
+    t2 += 15.0;
+    pdf.line(MARGIN_X, by(t2), "Audited figures from each company's latest Form 10-K (SEC EDGAR), sorted by FY2025 capex. Private operators (xAI, OpenAI, Anthropic) file no SEC reports and are omitted.", false, 9.0, gray.clone(), None);
+    t2 += 14.0;
+
+    let s_top = t2 + 6.0;
+    let s_head_wrap: Vec<Vec<String>> = s_head.iter().enumerate()
+        .map(|(i, h)| pdf.wrap(h, true, head, s_w[i] - pad_x * 2.0)).collect();
+    let s_head_lines = s_head_wrap.iter().map(|l| l.len()).max().unwrap_or(1) as f32;
+    let s_head_h = s_head_lines * lh + pad_y * 2.0;
+
+    let s_rowtexts: Vec<[&str; 9]> = secs.iter().map(|s| {
+        [s.company, s.capex23, s.capex24, s.capex25, s.ppe, s.ocf, s.ratio, s.leases, "10-K ↗"]
+    }).collect();
+    let s_wrapped: Vec<[Vec<String>; 9]> = s_rowtexts.iter().map(|t| {
+        std::array::from_fn(|i| pdf.wrap(t[i], s_bold[i], cell, s_w[i] - pad_x * 2.0))
+    }).collect();
+    let s_heights: Vec<f32> = s_wrapped.iter()
+        .map(|w| w.iter().map(|c| c.len()).max().unwrap_or(1) as f32 * lh + pad_y * 2.0)
+        .collect();
+    let s_table_h = s_head_h + s_heights.iter().sum::<f32>();
+    let s_table_w: f32 = s_w.iter().sum();
+
+    // Fills
+    pdf.fill_rect(s_x, by(s_top + s_head_h), s_table_w, s_head_h, header_bg.clone());
+    let mut ry = s_top + s_head_h;
+    for (i, h) in s_heights.iter().enumerate() {
+        let c = if i % 2 == 0 { row_a.clone() } else { row_b.clone() };
+        pdf.fill_rect(s_x, by(ry + h), s_table_w, *h, c);
+        ry += h;
+    }
+    // Header text
+    {
+        let mut cx = s_x;
+        for (i, lines) in s_head_wrap.iter().enumerate() {
+            for (li, ln) in lines.iter().enumerate() {
+                pdf.line(cx + pad_x, by(s_top + pad_y + head + li as f32 * lh), ln, true, head, header_fg.clone(), None);
+            }
+            cx += s_w[i];
+        }
+    }
+    // Row text
+    let mut ry = s_top + s_head_h;
+    for (ri, s) in secs.iter().enumerate() {
+        let mut cx = s_x;
+        for i in 0..9 {
+            let url = if i == 8 { Some(s.url) } else { None };
+            for (li, ln) in s_wrapped[ri][i].iter().enumerate() {
+                pdf.line(cx + pad_x, by(ry + pad_y + cell + li as f32 * lh), ln, s_bold[i], cell, s_color[i].clone(), url);
+            }
+            cx += s_w[i];
+        }
+        ry += s_heights[ri];
+    }
+    // Grid
+    let g_top = by(s_top);
+    let g_bot = by(s_top + s_table_h);
+    let mut vx = s_x;
+    pdf.seg(vx, g_top, vx, g_bot, 0.8, outer.clone());
+    for i in 0..9 {
+        vx += s_w[i];
+        let last = i == 8;
+        pdf.seg(vx, g_top, vx, g_bot, if last { 0.8 } else { 0.5 }, if last { outer.clone() } else { border.clone() });
+    }
+    pdf.seg(s_x, g_top, s_x + s_table_w, g_top, 0.8, outer.clone());
+    let yh = s_top + s_head_h;
+    pdf.seg(s_x, by(yh), s_x + s_table_w, by(yh), 0.8, outer.clone());
+    let mut ry = yh;
+    for (i, h) in s_heights.iter().enumerate() {
+        ry += h;
+        let last = i == s_heights.len() - 1;
+        pdf.seg(s_x, by(ry), s_x + s_table_w, by(ry), if last { 0.8 } else { 0.5 }, if last { outer.clone() } else { border.clone() });
+    }
+    // Footnotes
+    let f2 = s_top + s_table_h + 16.0;
+    pdf.line(MARGIN_X, by(f2), "Capex = purchases of property & equipment (cash-flow statement). Microsoft FY ends June; others December. Alphabet & Meta PP&E include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2 + 11.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Capex ÷ OCF = FY2025 capex as a share of operating cash flow. Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
+
+    let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
     // ---- Save ----
-    let page = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), pdf.ops);
-    doc.with_pages(vec![page]);
+    doc.with_pages(vec![page1, page2]);
     let mut sw: Vec<printpdf::PdfWarnMsg> = Vec::new();
     let bytes = doc.save(&PdfSaveOptions::default(), &mut sw);
     std::fs::write("pdf/datacenter_sources.pdf", &bytes).expect("write pdf");

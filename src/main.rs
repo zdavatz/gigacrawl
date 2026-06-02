@@ -22,6 +22,7 @@ const CELL_FG: Color = [30, 41, 59, 255];
 const COMPANY_FG: Color = [12, 74, 110, 255];
 const NOTE_FG: Color = [71, 85, 105, 255];
 const CAPEX_FG: Color = [21, 101, 52, 255];
+const COSTGW_FG: Color = [146, 64, 14, 255];
 const SITE_FG: Color = [55, 48, 107, 255];
 const BORDER: Color = [203, 213, 225, 255];
 const OUTER_BORDER: Color = [148, 163, 184, 255];
@@ -50,7 +51,7 @@ impl Cell {
     }
 }
 
-const NCOL: usize = 6;
+const NCOL: usize = 7;
 
 fn main() {
     // CLI: `--auth` runs the LinkedIn OAuth flow; `--post-linkedin` posts the
@@ -96,7 +97,7 @@ fn main() {
     let cell_pad_y = 11i32;
 
     // ---- Column widths ----
-    let col_w: [i32; NCOL] = [128, 162, 196, 116, 330, 332];
+    let col_w: [i32; NCOL] = [124, 150, 178, 104, 150, 300, 300];
     let table_w: i32 = col_w.iter().sum();
     let img_w = (table_w + margin * 2) as u32;
 
@@ -106,6 +107,7 @@ fn main() {
         "Operational\n(Up & Running)",
         "Planned / Under Construction",
         "FY2025 Capex\n(per 10-K)",
+        "Est. $/GW\n(flagship)²",
         "Key Sites & Power (location · GW)",
         "Key Notes",
     ];
@@ -121,8 +123,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("$128.3B", Style::Bold, CAPEX_FG),
+            Cell::new("~$5–6B/GW (facility)", Style::Bold, COSTGW_FG),
             Cell::new(
-                "New Carlisle, IN ($11–15B; ~2.4 GW added in region) · N. Virginia (~2.75 GW; $35B through 2040)",
+                "New Carlisle, IN ($11–15B; ~2.4 GW; ~500k AWS Trainium2 — Project Rainier) · N. Virginia (~2.75 GW; $35B through 2040)",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -137,8 +140,9 @@ fn main() {
             Cell::new("~5–8+ GW (global, est.)", Style::Regular, CELL_FG),
             Cell::new("Large pipeline (multi-GW projects)", Style::Regular, CELL_FG),
             Cell::new("$64.6B", Style::Bold, CAPEX_FG),
+            Cell::new("~$8B/GW (facility)", Style::Bold, COSTGW_FG),
             Cell::new(
-                "Fairwater — Wisconsin (~$7.3B; ~0.9 GW build-out, online early 2026) · Fairwater Atlanta (online) · Fairwater 4 under constr.",
+                "Fairwater — Wisconsin (~$7.3B; ~0.9 GW, early 2026) · Atlanta (online; GB300 NVL72, Blackwell Ultra) · Fairwater 4 (constr.)",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -157,8 +161,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("$91.4B", Style::Bold, CAPEX_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
             Cell::new(
-                "Global fleet. $52.7B of long-term data-center leases signed but not yet commenced (10-K)",
+                "Global fleet (TPU v7 Ironwood + Nvidia). $52.7B of long-term data-center leases signed but not yet commenced (10-K)",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -177,8 +182,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("$69.7B¹", Style::Bold, CAPEX_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
             Cell::new(
-                "Prometheus — New Albany, OH (~1 GW, online 2026) · Hyperion — Richland Parish, LA (→5 GW; $27B Blue Owl JV, 2,250 acres)",
+                "Prometheus — New Albany, OH (~1 GW, 2026; Blackwell GB200/GB300) · Hyperion — Richland Parish, LA (→5 GW; $27B Blue Owl JV, 2,250 acres)",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -197,8 +203,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("Private — n/a", Style::Regular, NOTE_FG),
+            Cell::new("~$9–15B/GW (all-in)", Style::Bold, COSTGW_FG),
             Cell::new(
-                "Memphis, TN — Colossus 1 (~0.3 GW) + Colossus 2 (~1.2 GW → ~2 GW, 555k+ GPUs); on-site power hub in Southaven, MS",
+                "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -221,8 +228,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("Private — $500B plan", Style::Regular, NOTE_FG),
+            Cell::new("~$50B/GW (all-in)", Style::Bold, COSTGW_FG),
             Cell::new(
-                "Abilene, TX (flagship → 1.2 GW; ~0.3 GW live) · Shackelford Co., TX · Doña Ana Co., NM · Lordstown, OH · Wisconsin · UAE (2026)",
+                "Abilene, TX (flagship → 1.2 GW; ~0.3 GW live; 450k GB200) · Shackelford Co., TX · Doña Ana Co., NM · Lordstown, OH · Wisconsin · UAE (2026)",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -245,8 +253,9 @@ fn main() {
                 CELL_FG,
             ),
             Cell::new("Private — $50B US plan", Style::Regular, NOTE_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
             Cell::new(
-                "Own (Fluidstack): Abernathy, TX (~168 MW) · Lake Mariner, NY (~360 MW). Partners: AWS, Google, Azure, xAI/Colossus 1",
+                "Own (Fluidstack): Abernathy, TX (~168 MW) · Lake Mariner, NY (~360 MW). Partners: AWS Trainium2 (~500k→1M), Google TPU v7 (≤1M), Azure (Nvidia), xAI Colossus 1",
                 Style::Regular,
                 SITE_FG,
             ),
@@ -258,8 +267,9 @@ fn main() {
         ],
     ];
 
-    let footnotes: [&str; 2] = [
+    let footnotes: [&str; 3] = [
         "¹ Meta 10-K (FY2025): \"We anticipate making capital expenditures of approximately $115 billion to $135 billion in 2026 to support our AI efforts and core business.\"",
+        "² Est. $/GW = a company's flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry benchmark ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.",
         "Capex = purchases of property & equipment from the latest annual 10-K cash-flow statement (Microsoft FY ends June; Amazon/Alphabet/Meta FY ends December). xAI & Anthropic are private and do not file with the SEC. GW capacity figures and site details are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.",
     ];
 
