@@ -59,6 +59,27 @@ Then render **and** post in one step:
 cargo run --release --bin datacenter_chart -- --post-linkedin
 ```
 
+## Post the chart to X (Twitter)
+
+`datacenter_chart --post-twitter` (alias `--post-x`) uploads the PNG via the
+v1.1 `media/upload` endpoint and tweets it via v2 `/2/tweets`, signed with
+OAuth 1.0a. Credentials come from `twitter_credentials.json` (cwd or `$HOME`):
+
+```json
+{"consumer_key":"...","consumer_secret":"...","token":"...","secret":"..."}
+```
+
+If that file is absent it falls back to the first profile in `~/.twurlrc`.
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-twitter
+# flags compose: --post-linkedin --post-twitter posts to both
+```
+
+Note: X discontinued the free API tier in Feb 2026 — posting is pay-per-use or
+a legacy paid plan, and the credentials must have **read+write** access. A
+`401 code 89` means the OAuth token is invalid/expired (regenerate it).
+
 ## Data sources & caveats
 
 - **Capex / PP&E** come from each company's latest annual **10-K** (via SEC

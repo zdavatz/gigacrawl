@@ -20,6 +20,9 @@ cargo build --release                         # build both binaries
 # LinkedIn (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --auth           # OAuth, writes linkedin_token.json
 cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, then post it
+
+# X/Twitter (datacenter_chart only):
+cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
 ```
 
 There is no test suite. Verify changes by rendering and inspecting the output
@@ -51,6 +54,14 @@ applied in both files:
   `--post-linkedin` posts `png/datacenter_capacity.png` (Images API →
   Posts API). The caption lives in `caption()` and must be passed through
   `escape_little_text` (LinkedIn truncates on unescaped control chars).
+- `src/twitter.rs` — X/Twitter image posting, used only by `datacenter_chart`
+  (`--post-twitter` / `--post-x`). Hand-rolled OAuth 1.0a (HMAC-SHA1; only the
+  oauth_* params are signed — multipart and JSON bodies are excluded, which is
+  correct for both endpoints). Uploads via v1.1 `media/upload` (the only media
+  endpoint; OAuth 2.0 not accepted there), then tweets via v2 `/2/tweets`.
+  Reads `twitter_credentials.json` (cwd/$HOME) or falls back to parsing
+  `~/.twurlrc`. Caption in `tweet_text()`. A `401 code 89` = invalid/expired
+  OAuth token (the X free tier ended Feb 2026; writes need a paid/PPU plan).
 
 ### Conventions that matter
 

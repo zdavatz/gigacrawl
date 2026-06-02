@@ -2,6 +2,7 @@ use ab_glyph::{Font, FontRef, Glyph, PxScale, ScaleFont};
 use image::{Rgba, RgbaImage};
 
 mod linkedin;
+mod twitter;
 
 // ---- Font handles (DejaVu Sans available on this system) ----
 const FONT_REGULAR: &[u8] = include_bytes!("/usr/share/fonts/dejavu/DejaVuSans.ttf");
@@ -62,7 +63,8 @@ fn main() {
         }
         return;
     }
-    let post = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
+    let post_linkedin = args.iter().any(|a| a == "--post-linkedin" || a == "--post");
+    let post_twitter = args.iter().any(|a| a == "--post-twitter" || a == "--post-x");
 
     let fonts = Fonts {
         regular: FontRef::try_from_slice(FONT_REGULAR).expect("regular font"),
@@ -420,11 +422,20 @@ fn main() {
     img.save(out).expect("save png");
     println!("Wrote {} ({}x{})", out, img_w, img_h);
 
-    if post {
+    if post_linkedin {
         match linkedin::publish_image(std::path::Path::new(out)) {
             Ok(url) => println!("Posted to LinkedIn: {url}"),
             Err(e) => {
                 eprintln!("[linkedin] post failed: {e}");
+                std::process::exit(1);
+            }
+        }
+    }
+    if post_twitter {
+        match twitter::publish_image(std::path::Path::new(out)) {
+            Ok(url) => println!("Posted to X: {url}"),
+            Err(e) => {
+                eprintln!("[twitter] post failed: {e}");
                 std::process::exit(1);
             }
         }
