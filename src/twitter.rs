@@ -157,20 +157,24 @@ pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
 
-    // Step 1 — upload media (v1.1, multipart, OAuth 1.0a).
-    let upload_url = "https://upload.twitter.com/1.1/media/upload.json";
+    // Step 1 — upload media (v2 media/upload, multipart, OAuth 1.0a).
+    // (v1.1 upload.twitter.com was retired on 2025-03-31.)
+    let upload_url = "https://api.twitter.com/2/media/upload";
     let bytes = fs::read(png_path)?;
     eprintln!(
         "[twitter] Uploading {} ({:.1} KB)",
         png_path.display(),
         bytes.len() as f64 / 1024.0
     );
-    let form = reqwest::blocking::multipart::Form::new().part(
-        "media",
-        reqwest::blocking::multipart::Part::bytes(bytes)
-            .file_name("datacenter_capacity.png")
-            .mime_str("image/png")?,
-    );
+    let form = reqwest::blocking::multipart::Form::new()
+        .text("media_category", "tweet_image")
+        .text("media_type", "image/png")
+        .part(
+            "media",
+            reqwest::blocking::multipart::Part::bytes(bytes)
+                .file_name("datacenter_capacity.png")
+                .mime_str("image/png")?,
+        );
     let resp = client
         .post(upload_url)
         .header("Authorization", auth_header(&creds, "POST", upload_url))
@@ -182,9 +186,12 @@ pub fn publish_image(png_path: &Path) -> Result<String, Box<dyn Error>> {
         return Err(format!("media upload failed ({status}): {text}").into());
     }
     let v: serde_json::Value = serde_json::from_str(&text)?;
-    let media_id = v["media_id_string"]
+    // v2 returns {"data":{"id":"..."}}; v1.1 returned {"media_id_string":"..."}.
+    let media_id = v["data"]["id"]
         .as_str()
-        .ok_or_else(|| format!("no media_id_string in response: {text}"))?
+        .or_else(|| v["media_id_string"].as_str())
+        .or_else(|| v["id"].as_str())
+        .ok_or_else(|| format!("no media id in upload response: {text}"))?
         .to_string();
     eprintln!("[twitter] media_id: {media_id}");
 
