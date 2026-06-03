@@ -103,26 +103,54 @@ cargo run --release --bin datacenter_chart -- --post-sec   # needs pdftoppm + th
 `--post-pdf` rasterizes **all three** PDF pages (`pdftoppm -r 200` →
 `png/pdf_page-{1,2,3}.png`) and publishes them as a **single multi-image post**
 to **LinkedIn** (`multiImage`) and, best-effort, to **X** (up to 4 images). The
-caption always links to the full clickable PDF on GitHub. `--post-pdf-x`
-restricts to X only.
+caption always links to the full clickable PDF on GitHub. Network-restricted
+variants:
 
 ```sh
-cargo run --release --bin datacenter_chart -- --post-pdf     # LinkedIn + X
-cargo run --release --bin datacenter_chart -- --post-pdf-x   # X only
+cargo run --release --bin datacenter_chart -- --post-pdf        # LinkedIn + X
+cargo run --release --bin datacenter_chart -- --post-pdf-li     # LinkedIn only
+cargo run --release --bin datacenter_chart -- --post-pdf-x      # X only (multi-image)
+cargo run --release --bin datacenter_chart -- --post-pdf-thread # X reply-chain thread
 ```
 
-Notes:
+### Post the PDF itself to LinkedIn (native document)
+
+`--post-pdf-doc` uploads `pdf/datacenter_sources.pdf` to LinkedIn as a **native
+document post** (Documents API → `content.media`), which renders in-feed as a
+swipeable, downloadable carousel rather than flat images:
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-pdf-doc    # LinkedIn only
+```
+
+Note: LinkedIn's in-feed PDF viewer **rasterizes** the pages, so the per-figure
+10-K hyperlinks are clickable only after a reader **downloads** the PDF — the
+caption points at the GitHub copy for click-through. X accepts no PDFs.
+
+### Post a single PNG to X
+
+`--post-png <path> <caption>` posts one PNG as a plain standalone tweet —
+general-purpose, and the only tweet form that reliably clears X pay-per-use
+(see below).
+
+```sh
+cargo run --release --bin datacenter_chart -- --post-png png/pdf_page-2.png "caption text"
+```
+
+Notes on X posting:
 - X discontinued the free API tier in Feb 2026 — posting is pay-per-use (needs
   API credit) or a legacy paid plan.
 - A `401`/`code 89` means the OAuth credentials are invalid or the four values
   are from different apps; a `403` means the account/plan lacks write or credit.
 - **Pay-per-use `POST /2/tweets` 403:** as of mid-2026 X pay-per-use accounts
-  can hit `403 "You are not permitted to perform this action"` on the *tweet
-  create* call even with credit, correct Read+Write keys, and the app attached
-  to a Project — while `POST /2/media/upload` still succeeds. This is an X
-  platform-side issue (widely reported on the developer forum), not a
-  credential or code problem; `--post-pdf` therefore treats X as best-effort and
-  still succeeds if LinkedIn posts.
+  hit `403 "You are not permitted to perform this action"` on the *tweet create*
+  call in two situations, while `POST /2/media/upload` always succeeds:
+  (a) **multi-image** posts and **reply** tweets (threads) appear to be blocked
+  outright on this tier; (b) even plain single-image posts succeed only a few
+  times before further creates 403 — consistent with a short-window **write
+  rate-limit** returned as `403` rather than `429`. `--post-pdf` therefore treats
+  X as best-effort and still succeeds if LinkedIn posts; for X, plain
+  single-image `--post-png`/`--post-twitter` (spaced out) is the reliable path.
 - X accepts only **images/video** — not PDFs. The PDF lives in the repo and is
   referenced by link in the post text.
 

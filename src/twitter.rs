@@ -222,18 +222,23 @@ fn upload_media(
 }
 
 /// Create a tweet with `caption` and the given media ids (v2, JSON, OAuth
-/// 1.0a). Returns the tweet URL.
+/// 1.0a). If `reply_to` is set, the tweet is posted as a reply to that tweet
+/// id (used to build threads). Returns the new tweet's id.
 fn create_tweet(
     client: &reqwest::blocking::Client,
     creds: &Creds,
     caption: &str,
     media_ids: &[String],
+    reply_to: Option<&str>,
 ) -> Result<String, Box<dyn Error>> {
     let tweets_url = "https://api.twitter.com/2/tweets";
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "text": caption,
         "media": { "media_ids": media_ids }
     });
+    if let Some(id) = reply_to {
+        body["reply"] = serde_json::json!({ "in_reply_to_tweet_id": id });
+    }
     let resp = client
         .post(tweets_url)
         .header("Authorization", auth_header(creds, "POST", tweets_url))
@@ -246,10 +251,12 @@ fn create_tweet(
         return Err(format!("create tweet failed ({status}): {text}").into());
     }
     let v: serde_json::Value = serde_json::from_str(&text)?;
-    let id = v["data"]["id"].as_str().unwrap_or("(unknown)");
-    let url = format!("https://x.com/i/web/status/{id}");
-    eprintln!("[twitter] Published: {url}");
-    Ok(url)
+    let id = v["data"]["id"]
+        .as_str()
+        .ok_or_else(|| format!("no tweet id in response: {text}"))?
+        .to_string();
+    eprintln!("[twitter] Published: https://x.com/i/web/status/{id}");
+    Ok(id)
 }
 
 /// Upload `png_path` and post a tweet with it, using `caption` text.
@@ -276,5 +283,32 @@ pub fn publish_images(png_paths: &[&Path], caption: &str) -> Result<String, Box<
     for path in png_paths {
         media_ids.push(upload_media(&client, &creds, path)?);
     }
-    create_tweet(&client, &creds, caption, &media_ids)
+    let id = create_tweet(&client, &creds, caption, &media_ids, None)?;
+    Ok(format!("https://x.com/i/web/status/{id}"))
+}
+
+/// Post a thread: one single-image tweet per (path, caption), each replying to
+/// the previous. This is the workaround for X pay-per-use rejecting *multi*-
+/// image posts (403) while single-image posts succeed. Returns the URL of the
+/// first (root) tweet.
+pub fn publish_thread(items: &[(&Path, String)]) -> Result<String, Box<dyn Error>> {
+    if items.is_empty() {
+        return Err("no images to post".into());
+    }
+    let creds = load_creds()?;
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(180))
+        .build()?;
+
+    let mut prev: Option<String> = None;
+    let mut root_url = String::new();
+    for (i, (path, caption)) in items.iter().enumerate() {
+        let media_id = upload_media(&client, &creds, path)?;
+        let id = create_tweet(&client, &creds, caption, &[media_id], prev.as_deref())?;
+        if i == 0 {
+            root_url = format!("https://x.com/i/web/status/{id}");
+        }
+        prev = Some(id);
+    }
+    Ok(root_url)
 }

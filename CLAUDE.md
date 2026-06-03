@@ -25,15 +25,31 @@ cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, the
 cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
 cargo run --release --bin datacenter_chart -- --post-sec       # render PDF page 2 -> png/sec_financials.png, post to both
 cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 3 PDF pages -> png/pdf_page-{1,2,3}.png, post as ONE multi-image post to LinkedIn + X
-cargo run --release --bin datacenter_chart -- --post-pdf-x     # same but X only
+cargo run --release --bin datacenter_chart -- --post-pdf-li    # same, LinkedIn only
+cargo run --release --bin datacenter_chart -- --post-pdf-x     # same, X only (multi-image)
+cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 3 pages to X as a reply-chain thread
+cargo run --release --bin datacenter_chart -- --post-pdf-doc   # post pdf/datacenter_sources.pdf to LinkedIn as a NATIVE document (Documents API)
+cargo run --release --bin datacenter_chart -- --post-png <path> <caption>  # post one PNG as a plain standalone tweet
 cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 ```
 
 `--post-pdf` posts to LinkedIn (`multiImage`) and best-effort to X; it still
-succeeds if LinkedIn posts even when X fails. NB: X pay-per-use accounts
-currently `403` on `POST /2/tweets` (the *tweet create* call) even with credit,
-Read+Write keys, and the app in a Project — while `POST /2/media/upload`
-succeeds. This is an X platform-side issue (mid-2026), not creds/code.
+succeeds if LinkedIn posts even when X fails. `--post-pdf-li`/`--post-pdf-x`
+restrict to one network; `--post-pdf-thread` posts the 3 pages to X as a
+reply-chain (one single-image tweet per page).
+
+**X pay-per-use posting (mid-2026)** — `POST /2/media/upload` always succeeds,
+but `POST /2/tweets` (the *tweet create* call) `403`s ("not permitted") in two
+cases: (a) **multi-image** posts and **reply** tweets (threads) are blocked
+outright on this tier; (b) even plain single-image creates succeed only a few
+times per short window before further ones `403` — a write **rate-limit**
+returned as `403`, not `429`. Reliable X path = spaced-out single-image posts
+(`--post-png` / `--post-twitter`). Not a creds/code problem.
+
+`--post-pdf-doc` is the only way to get the *actual PDF* onto a network:
+LinkedIn renders it as a swipeable, downloadable carousel, but its in-feed
+viewer rasterizes pages so the 10-K hyperlinks are clickable only after
+download. X accepts no PDFs.
 
 There is no test suite. Verify changes by rendering and inspecting the output
 (e.g. `feh png/datacenter_capacity.png`, or rasterize the PDF with
@@ -76,7 +92,12 @@ applied in both files:
   `publish_images(paths, commentary, title)` posts several PNGs as one post:
   `content.media` for a single image, `content.multiImage` (2–20 images, each
   with `altText`) for more; `publish_image` delegates to it. The shared
-  `upload_image` helper does initializeUpload → PUT.
+  `upload_image` helper does initializeUpload → PUT. `publish_document(path,
+  commentary, title)` posts a **native PDF document** via the parallel Documents
+  API (`/rest/documents?action=initializeUpload` → PUT → Posts API with
+  `content.media` = the `urn:li:document:…`), via `upload_document` +
+  `create_document_post`. The Documents API uses the same `w_member_social`
+  scope as images and is confirmed working for gigacrawl's app.
 - `src/twitter.rs` — X/Twitter image posting, used only by `datacenter_chart`
   (`--post-twitter` / `--post-x`). Hand-rolled OAuth 1.0a (HMAC-SHA1; only the
   oauth_* params are signed — multipart and JSON bodies are excluded, which is
@@ -92,7 +113,11 @@ applied in both files:
   `png/pdf_page-{1,2,3}.png` and posts them as ONE multi-image post via
   `twitter::publish_images(paths, caption)` (shared `upload_media` +
   `create_tweet` helpers; up to 4 images) and `linkedin::publish_images`.
-  `linkedin::publish_image(path, commentary, title)` is likewise
+  `create_tweet` takes an optional `reply_to` tweet id and returns the new
+  tweet's **id** (callers format the URL); `publish_thread(items)` builds a
+  reply-chain (each tweet replies to the previous) and backs `--post-pdf-thread`.
+  `publish_image(path, caption)` posts a single standalone tweet and backs
+  `--post-png`. `linkedin::publish_image(path, commentary, title)` is likewise
   caption-parameterized. Gotcha: all four OAuth values must come from
   the **same** app and the app must be Read+Write — a `401`/`code 89` means
   mismatched/invalid creds; `403` means the account lacks write/credit (X free

@@ -321,6 +321,130 @@ fn upload_image(
     Ok(image_urn)
 }
 
+/// Upload a document (e.g. a PDF) to LinkedIn via the Documents API
+/// (initializeUpload → PUT bytes). Returns the document URN to attach to a
+/// post. Native document posts render as a swipeable carousel in-feed and are
+/// downloadable; the API/scope is `w_member_social`, same as images.
+fn upload_document(
+    client: &reqwest::blocking::Client,
+    auth: &str,
+    owner: &str,
+    doc_path: &Path,
+) -> Result<String, Box<dyn Error>> {
+    let bytes = fs::read(doc_path)?;
+    eprintln!(
+        "[linkedin] Uploading document {} ({:.1} KB)",
+        doc_path.display(),
+        bytes.len() as f64 / 1024.0
+    );
+
+    // Step 1 — initialize document upload
+    let init_resp = client
+        .post("https://api.linkedin.com/rest/documents?action=initializeUpload")
+        .header("Authorization", auth)
+        .header("Content-Type", "application/json")
+        .header("LinkedIn-Version", LINKEDIN_VERSION)
+        .header("X-Restli-Protocol-Version", "2.0.0")
+        .json(&serde_json::json!({ "initializeUploadRequest": { "owner": owner } }))
+        .send()?;
+    let status = init_resp.status();
+    let text = init_resp.text()?;
+    if !status.is_success() {
+        return Err(format!("document initializeUpload failed ({status}): {text}").into());
+    }
+    let init: serde_json::Value = serde_json::from_str(&text)?;
+    let value = &init["value"];
+    let doc_urn = value["document"]
+        .as_str()
+        .ok_or_else(|| format!("no document URN in response: {text}"))?
+        .to_string();
+    let upload_url = value["uploadUrl"]
+        .as_str()
+        .ok_or_else(|| format!("no uploadUrl in response: {text}"))?
+        .to_string();
+
+    // Step 2 — PUT the bytes
+    let put_resp = client
+        .put(&upload_url)
+        .header("Authorization", auth)
+        .header("Content-Type", "application/octet-stream")
+        .body(bytes)
+        .send()?;
+    if !put_resp.status().is_success() {
+        let s = put_resp.status();
+        return Err(format!("document PUT failed ({s}): {}", put_resp.text().unwrap_or_default()).into());
+    }
+    eprintln!("[linkedin] Document uploaded: {}", doc_urn);
+    Ok(doc_urn)
+}
+
+/// Create a native document post (PDF) and return its feed URL.
+fn create_document_post(
+    client: &reqwest::blocking::Client,
+    auth: &str,
+    owner: &str,
+    commentary: &str,
+    title: &str,
+    doc_urn: &str,
+) -> Result<String, Box<dyn Error>> {
+    let post_body = serde_json::json!({
+        "author": owner,
+        "commentary": escape_little_text(commentary),
+        "visibility": "PUBLIC",
+        "distribution": {
+            "feedDistribution": "MAIN_FEED",
+            "targetEntities": [],
+            "thirdPartyDistributionChannels": []
+        },
+        "content": { "media": { "title": title, "id": doc_urn } },
+        "lifecycleState": "PUBLISHED",
+        "isReshareDisabledByAuthor": false
+    });
+    let post_resp = client
+        .post("https://api.linkedin.com/rest/posts")
+        .header("Authorization", auth)
+        .header("Content-Type", "application/json")
+        .header("LinkedIn-Version", LINKEDIN_VERSION)
+        .header("X-Restli-Protocol-Version", "2.0.0")
+        .json(&post_body)
+        .send()?;
+    let post_status = post_resp.status();
+    let headers = post_resp.headers().clone();
+    let post_text = post_resp.text().unwrap_or_default();
+    if !post_status.is_success() {
+        return Err(format!("create document post failed ({post_status}): {post_text}").into());
+    }
+    let post_id = headers
+        .get("x-restli-id")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("(unknown)");
+    let url = format!("https://www.linkedin.com/feed/update/{post_id}/");
+    eprintln!("[linkedin] Published document post: {url}");
+    Ok(url)
+}
+
+/// Upload `doc_path` (a PDF) and publish it as a native LinkedIn document post
+/// with `commentary` text and document `title`. Returns the post URL.
+pub fn publish_document(doc_path: &Path, commentary: &str, title: &str) -> Result<String, Box<dyn Error>> {
+    let (creds_path, creds) = load_credentials()?;
+    eprintln!("[linkedin] Using credentials: {}", creds_path.display());
+    let (token_path, token) = load_token()?;
+    if token.person_id.is_empty() {
+        return Err("linkedin_token.json has empty person_id (run --auth)".into());
+    }
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(180))
+        .build()?;
+    let token = refresh_token(&client, &creds, &token, &token_path);
+
+    let owner = format!("urn:li:person:{}", token.person_id);
+    let auth = format!("Bearer {}", token.access_token);
+
+    let doc_urn = upload_document(&client, &auth, &owner, doc_path)?;
+    create_document_post(&client, &auth, &owner, commentary, title, &doc_urn)
+}
+
 /// Create a post (single `media` for one image, `multiImage` for several) and
 /// return its feed URL.
 fn create_post(
