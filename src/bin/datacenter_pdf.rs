@@ -303,6 +303,7 @@ const MSFT: &str = "https://www.sec.gov/Archives/edgar/data/789019/0000950170251
 const GOOG: &str = "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm";
 const GOOG_FWP: &str = "https://www.sec.gov/Archives/edgar/data/1652044/000119312526251733/d160205dfwp.htm";
 const META: &str = "https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm";
+const ORCL: &str = "https://www.sec.gov/Archives/edgar/data/1341439/000095017025087926/orcl-20250531.htm";
 const XAI: &str = "https://x.ai/news/anthropic-compute-partnership";
 const OPENAI: &str = "https://openai.com/index/five-new-stargate-sites/";
 const ANTHROPIC: &str = "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure";
@@ -391,6 +392,16 @@ fn main() {
             links: &[("10-K ↗", META)],
             sites: "Prometheus — New Albany, OH (~1 GW, 2026; Blackwell GB200/GB300) · Hyperion — Richland Parish, LA (→5 GW; $27B Blue Owl JV)",
             notes: "10-K guides FY2026 capex to ~$115–135B. Hyperion is among the largest planned campuses worldwide.",
+        },
+        Row {
+            company: "Oracle (OCI)",
+            operational: "~2–3 GW (OCI global est.)",
+            planned: ">10 GW power secured for next 3 yrs; 4.5 GW Stargate deal (OpenAI)",
+            capex: "$21.2B",
+            cost_gw: "— (n/d)",
+            links: &[("10-K ↗", ORCL)],
+            sites: "Abilene, TX (Stargate flagship; ~1.2 GW, →~450k GB200 — built by Crusoe, OCI operates) · Shackelford & Doña Ana Co. · Wisconsin (Vantage) · Michigan",
+            notes: "RPO backlog $553B (Q3 FY2026), mostly large AI contracts. FY2026 capex guided ~$50B. Reported ~$300B/5-yr OpenAI compute deal. FY ends May.",
         },
         Row {
             company: "xAI",
@@ -566,6 +577,8 @@ fn main() {
               ppe: "$176.4B  (+45%)", ocf: "$115.8B", ratio: "60%", leases: "$103.8B", url: META },
         Sec { company: "Microsoft (Azure)", capex23: "$28.1B", capex24: "$44.5B", capex25: "$64.6B",
               ppe: "$205.0B  (+51%)", ocf: "$136.2B", ratio: "47%", leases: "$92.7B", url: MSFT },
+        Sec { company: "Oracle (OCI)", capex23: "$8.7B", capex24: "$6.9B", capex25: "$21.2B",
+              ppe: "$43.5B  (+102%)", ocf: "$20.8B", ratio: "102%", leases: "$43.4B", url: ORCL },
     ];
     let s_head = [
         "Company",
@@ -662,7 +675,7 @@ fn main() {
     }
     // Footnotes
     let f2 = s_top + s_table_h + 16.0;
-    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30; Amazon, Alphabet & Meta end December 31). Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30, Oracle's May 31; Amazon, Alphabet & Meta end December 31). Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 11.0), "PP&E (property, plant & equipment), net = book value of long-lived physical assets (land, buildings, servers, network gear) after depreciation; Alphabet & Meta include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 22.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 33.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
@@ -692,11 +705,12 @@ fn main() {
     ];
     let comp_w = [110.0f32, 172.0, 152.0, 110.0, 122.0, 120.0]; // 786
     // Ordered by FY2025 capex (matches the table above).
-    let comp_cells: [(&str, &str, &str, &str, &str, &str); 4] = [
+    let comp_cells: [(&str, &str, &str, &str, &str, &str); 5] = [
         ("Amazon (AWS)", "$172.5B  servers & networking", "$155.1B  land & buildings", "$71.7B", "in land & bldg¹", AMZN),
         ("Alphabet (Google)", "~$122B  \u{2248}60% of tech. infra²", "~$82B DC bldg + $48.3B office²", "$78.6B  not yet in service", "embedded²", GOOG),
         ("Meta Platforms", "$98.0B  servers & network assets", "$59.3B  buildings + land", "$50.5B", "$8.2B", META),
         ("Microsoft (Azure)", "$132.8B  computer equip. & sw", "$159.4B  bldg + land + leasehold", "\u{2014}³", "$44.0B  (net)", MSFT),
+        ("Oracle (OCI)", "$30.3B  computer, network & equip.", "$10.9B buildings + $1.4B land", "$16.5B  (mostly DC compute)\u{2074}", "$2.9B  (in PP&E, net)", ORCL),
     ];
     let comp_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = comp_cells
         .iter()
@@ -718,7 +732,8 @@ fn main() {
     cf = pdf.paragraph(MARGIN_X, cf, "All figures are FY2025 gross (at cost) from each 10-K's property & equipment note, except finance-lease right-of-use assets (net). Category labels differ by filer; the \"compute\" column is each company's own server/equipment bucket — SEC filings do not isolate GPU spend.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "¹ Amazon reports land and buildings as one line (finance-lease property included within it) and its PP&E also holds large non-data-center fulfilment/logistics assets (heavy & other equipment $128.9B), so its compute share understates data-center intensity.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "² Alphabet's 10-K states ~60% of \"technical infrastructure\" ($203.7B) is servers & network equipment (\u{2248}$122B); the rest (\u{2248}$82B) is data-center land/buildings. Office space ($48.3B) is separate; finance-lease ROU is embedded in PP&E, not itemized.", 7.2, gray.clone(), fw) + 2.0;
-    pdf.paragraph(MARGIN_X, cf, "³ Microsoft presents PP&E at cost with no construction-in-progress line ($32.1B committed for datacenter/building construction at fiscal year-end); its $44.0B net finance-lease right-of-use assets are reported in the leases note, not in the PP&E table.", 7.2, gray.clone(), fw);
+    cf = pdf.paragraph(MARGIN_X, cf, "³ Microsoft presents PP&E at cost with no construction-in-progress line ($32.1B committed for datacenter/building construction at fiscal year-end); its $44.0B net finance-lease right-of-use assets are reported in the leases note, not in the PP&E table.", 7.2, gray.clone(), fw) + 2.0;
+    pdf.paragraph(MARGIN_X, cf, "\u{2074} Oracle (FY ended May 31, 2025): gross PP&E $59.6B; its construction-in-progress \"primarily consist[s] of computer equipment to be built and deployed at our data centers\" (10-K), so most of the $16.5B is compute. Finance-lease ROU ($2.9B net) sits inside PP&E; operating-lease ROU ($13.1B) is in other assets, and ~$43.4B of leases had not yet commenced.", 7.2, gray.clone(), fw);
 
     let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 

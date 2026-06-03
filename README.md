@@ -23,8 +23,8 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
 
-Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, xAI, OpenAI,
-Anthropic — ordered by estimated operational GW.
+Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, Oracle (OCI),
+xAI, OpenAI, Anthropic — ordered by estimated operational GW.
 
 ## Build & run
 

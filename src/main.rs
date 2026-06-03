@@ -95,8 +95,8 @@ fn main() {
             }
         }
         let path = std::path::Path::new(sec_png);
-        let li_caption = "How much are the AI hyperscalers actually spending? Straight from the FY2025 SEC 10-Ks:\n\nFY2025 capex — Amazon $131.8B, Alphabet $91.4B, Meta $69.7B, Microsoft $64.6B.\nAlso PP&E (net), operating cash flow, capex÷OCF, and \"leases not yet commenced\" (mostly data centers): Amazon $96.4B, Microsoft $92.7B, Meta $103.8B, Alphabet $58.5B.\n\nEvery figure links to the underlying 10-K on sec.gov. Full clickable PDF:\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #DataCenters #CapEx #SEC #CloudInfrastructure";
-        let tw_caption = "FY2025 AI data-center capex from the SEC 10-Ks: Amazon $131.8B · Alphabet $91.4B · Meta $69.7B · Microsoft $64.6B. Plus PP&E, operating cash flow & \"leases not yet commenced\" — each figure links to its filing.\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #SEC #CapEx";
+        let li_caption = "How much are the AI hyperscalers actually spending? Straight from the FY2025 SEC 10-Ks:\n\nFY2025 capex — Amazon $131.8B, Alphabet $91.4B, Meta $69.7B, Microsoft $64.6B, Oracle $21.2B.\nAlso PP&E (net), operating cash flow, capex÷OCF, and \"leases not yet commenced\" (mostly data centers): Amazon $96.4B, Microsoft $92.7B, Meta $103.8B, Alphabet $58.5B, Oracle $43.4B.\n\nEvery figure links to the underlying 10-K on sec.gov. Full clickable PDF:\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #DataCenters #CapEx #SEC #CloudInfrastructure";
+        let tw_caption = "FY2025 AI data-center capex from the SEC 10-Ks: Amazon $131.8B · Alphabet $91.4B · Meta $69.7B · Microsoft $64.6B · Oracle $21.2B. Plus PP&E, operating cash flow & \"leases not yet commenced\" — each figure links to its filing.\ngithub.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf\n#AI #SEC #CapEx";
         let title = "AI Data-Center Capex — FY2025 SEC 10-K Financials";
         match linkedin::publish_image(path, li_caption, title) {
             Ok(u) => println!("Posted SEC page to LinkedIn: {u}"),
@@ -275,6 +275,27 @@ fn main() {
             ),
         ],
         [
+            Cell::new("Oracle (OCI)", Style::Bold, COMPANY_FG),
+            Cell::new("~2–3 GW (OCI global, est.)", Style::Regular, CELL_FG),
+            Cell::new(
+                ">10 GW of power secured for next 3 yrs; 4.5 GW Stargate deal with OpenAI",
+                Style::Regular,
+                CELL_FG,
+            ),
+            Cell::new("$21.2B", Style::Bold, CAPEX_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
+            Cell::new(
+                "Abilene, TX (Stargate flagship; ~1.2 GW, →~450k GB200 — built by Crusoe, OCI operates) · Shackelford Co. & Doña Ana Co. · Wisconsin (Vantage) · Michigan",
+                Style::Regular,
+                SITE_FG,
+            ),
+            Cell::new(
+                "RPO backlog $553B (Q3 FY2026), mostly large AI contracts. FY2026 capex guided ~$50B. Reported ~$300B / 5-yr OpenAI compute deal. FY ends May.",
+                Style::Regular,
+                NOTE_FG,
+            ),
+        ],
+        [
             Cell::new("xAI", Style::Bold, COMPANY_FG),
             Cell::new("~2 GW (Colossus, Memphis)", Style::Regular, CELL_FG),
             Cell::new(
@@ -350,7 +371,7 @@ fn main() {
     let footnotes: [&str; 3] = [
         "¹ Meta 10-K (FY2025): \"We anticipate making capital expenditures of approximately $115 billion to $135 billion in 2026 to support our AI efforts and core business.\"",
         "² Est. $/GW = a company's flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry benchmark ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.",
-        "Capex = purchases of property & equipment from the latest annual 10-K cash-flow statement (Microsoft FY ends June; Amazon/Alphabet/Meta FY ends December). xAI & Anthropic are private and do not file with the SEC. GW capacity figures and site details are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.",
+        "Capex = purchases of property & equipment from the latest annual 10-K cash-flow statement (Microsoft FY ends June, Oracle FY ends May; Amazon/Alphabet/Meta FY ends December). xAI, OpenAI & Anthropic are private and do not file with the SEC. GW capacity figures and site details are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.",
     ];
 
     // ---- Pre-compute wrapped lines per cell to derive row heights ----
