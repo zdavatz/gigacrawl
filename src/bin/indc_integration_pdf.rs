@@ -225,11 +225,9 @@ fn main() {
         "Indikationscode (IndC) — Integrations-Leitfaden für Softwarehäuser",
         true, 16.0, title_c.clone(), None);
     top += 18.0;
-    pdf.line(MARGIN_X, by(top),
-        "Stichtag 01.07.2026: IndC ist Pflichtangabe auf jedem SL-Rezept und jeder SL-Rechnung. Ab 01.01.2027: Rückweisungsgrund. \
-         Wer oddb2xml bereits als Datenquelle einsetzt, kommt mit minimalem Aufwand ans Ziel.",
-        false, 9.5, gray.clone(), None);
-    top += 22.0;
+    top = pdf.paragraph(MARGIN_X, top,
+        "Stichtag 01.07.2026: IndC ist Pflichtangabe auf jedem SL-Rezept und jeder SL-Rechnung. Ab 01.01.2027: Rückweisungsgrund. Wer oddb2xml bereits als Datenquelle einsetzt, kommt mit minimalem Aufwand ans Ziel.",
+        9.5, gray.clone(), fw) + 12.0;
 
     // Two-column layout: left = Datenquelle, right = UI-Pattern
     let col_gap = 18.0f32;
@@ -309,7 +307,7 @@ fn main() {
 
     let extras = [
         ("Persistenz",  "Einmal gesetzter IndC für eine Dauertherapie wird bei Folgeverordnung vorgeschlagen — Pflegezeit 0."),
-        ("ICD-Brücke",  "Wenn ICD-10 / Tessinercode in der Software dokumentiert, kann das System den wahrscheinlichsten IndC vorschlagen (nicht setzen). Mapping ICD → IndC stellen wir bereit."),
+        ("ICD-Brücke",  "Sobald eine Mapping-Tabelle ICD-10 / Tessinercode → IndC besteht (1:n, abgeleitet aus den Limitations-Texten), kann das System den wahrscheinlichsten IndC vorschlagen (nicht setzen). Heute noch nicht vorhanden, gemeinsam mit den Softwarehäusern aufbaubar."),
         ("Indikations-Wechsel", "Wenn der Arzt das Indikationsfeld ändert, schlägt das System den passenden IndC neu vor und fragt nur, wenn mehrere möglich."),
         ("Suchhilfe",   "Volltextsuche auf INDIKATIONSCODE_TEXT (z. B. «Mamma» → liefert 18082.04). Spart das ePL-Browsen."),
     ];
@@ -342,10 +340,9 @@ fn main() {
         "Datenfluss von der SL bis zur Kasse — und was an welcher Stelle zu tun ist",
         true, 15.0, title_c.clone(), None);
     top += 16.0;
-    pdf.line(MARGIN_X, by(top),
+    top = pdf.paragraph(MARGIN_X, top,
         "Wer oddb2xml bereits konsumiert, hat den Daten-Teil. Übrig bleibt eine kleine UI-Erweiterung und ein zusätzliches Feld im ausgehenden Rezept-/Rechnungs-Format.",
-        false, 9.0, gray.clone(), None);
-    top += 18.0;
+        9.0, gray.clone(), fw) + 10.0;
 
     // Pipeline strip — coloured boxes
     let boxes: [(&str, &str, Color); 5] = [
