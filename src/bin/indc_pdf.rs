@@ -99,7 +99,10 @@ impl<'a> Pdf<'a> {
         self.ops.push(Op::EndTextSection);
 
         if let Some(url) = url {
-            let w = self.width(text, bold, size);
+            // ab_glyph under-measures the rendered advance by ~10–14 %; without
+            // WRAP_FUDGE the underline and the link-annotation hitbox stop
+            // short of the final glyph (visible on the trailing \u{2197} arrow).
+            let w = self.width(text, bold, size) * WRAP_FUDGE;
             self.ops.push(Op::SetOutlineColor { col: col.clone() });
             self.ops.push(Op::SetOutlineThickness { pt: Pt(0.5) });
             self.ops.push(Op::DrawLine {
@@ -483,26 +486,28 @@ fn main() {
         false, 9.0, gray.clone(), None);
     top += 14.0;
 
-    // Sample IndC table
+    // Sample IndC table — curated across the price spectrum from CHF 3.30 to
+    // CHF 82'239.72 (factor ~25'000) so the dynamic range of SL drugs is
+    // visible; sorted by EFP descending.
     let s_headers = ["IndC", "Markenname", "ATC", "EFP (CHF)", "Indikation (Auszug)"];
-    let s_w = [50.0f32, 160.0, 56.0, 60.0, fw - (50.0 + 160.0 + 56.0 + 60.0)];
+    let s_w = [50.0f32, 168.0, 56.0, 64.0, fw - (50.0 + 168.0 + 56.0 + 64.0)];
     let s_rows_data: &[(&str, &str, &str, &str, &str)] = &[
-        ("17079.01", "MabThera Inf Konz 100 mg/10ml", "L01FA01", "518.60",
-         "Hämatologie — CD20+ follikuläres Non-Hodgkin-Lymphom (Stad. III–IV), Kombination mit CVP oder CHOP; Erhaltungstherapie mit Rituximab-Monotherapie über 2 Jahre."),
-        ("17079.02", "MabThera Inf Konz 100 mg/10ml", "L01FA01", "518.60",
-         "Autoimmunerkrankungen — rheumatoide Arthritis und weitere im Fachinformations-Text genannte Indikationen."),
-        ("17079.04", "MabThera Inf Konz 100 mg/10ml", "L01FA01", "518.60",
-         "Kombination MabThera + Polivy + Bendamustin bei rezidiviertem oder refraktärem DLBCL."),
-        ("18082.01", "Avastin Inf Konz 100 mg/4ml", "L01FG01", "563.40",
-         "Kolorektalkarzinom."),
-        ("18082.02", "Avastin Inf Konz 100 mg/4ml", "L01FG01", "563.40",
-         "Lungenkarzinom."),
-        ("18082.03", "Avastin Inf Konz 100 mg/4ml", "L01FG01", "563.40",
-         "Nierenzellkarzinom."),
-        ("18082.04", "Avastin Inf Konz 100 mg/4ml", "L01FG01", "563.40",
-         "Mammakarzinom."),
-        ("18082.05", "Avastin Inf Konz 100 mg/4ml", "L01FG01", "563.40",
-         "Ovarialkarzinom."),
+        ("21635.02", "Amvuttra Inj Lös 25 mg/0.5 ml", "N07XX18", "82'239.72",
+         "Transthyretin-Amyloidose-Kardiomyopathie (ATTR-CM) — Vutrisiran (siRNA), Erbkrankheit."),
+        ("20734.01", "Strensiq Inj Lös 80 mg/0.8 ml", "A16AB13", "47'454.97",
+         "Knochenmanifestationen der Hypophosphatasie (HPP) — Asfotase alfa, Enzymersatztherapie."),
+        ("21174.01", "Givlaari Inj Lös 189 mg/ml",   "A16AX16", "41'658.80",
+         "Akute hepatische Porphyrie (AHP) bei Erwachsenen — Givosiran (siRNA)."),
+        ("21784.01", "Fabhalta Kaps 200 mg",          "L04AJ08", "24'998.27",
+         "Paroxysmale nächtliche Hämoglobinurie (PNH) — Iptacopan, Komplement-Faktor-B-Inhibitor."),
+        ("21011.07", "Imbruvica Filmtabl 560 mg",    "L01EL01",  "5'490.05",
+         "Mantelzelllymphom (MCL, Monotherapie) — Ibrutinib, BTK-Inhibitor."),
+        ("20481.06", "Kyprolis Trockensub 60 mg",    "L01XG02",  "1'025.08",
+         "Multiples Myelom (Kombination KRd: Carfilzomib + Lenalidomid + Dexamethason)."),
+        ("20244.01", "Jardiance Filmtabl 10 mg",     "A10BK03",    "119.70",
+         "Typ 2 Diabetes — Empagliflozin, SGLT2-Hemmer (Volumen-Indikation, ~1.1 Mio. Patient:innen/Jahr CH)."),
+        ("22011.01", "Prilid Leman Patch Pfl",       "N01BB20",      "3.30",
+         "Lokalanästhesie zur ambulanten Anwendung im Spital oder im Dialysezentrum."),
     ];
     let s_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = s_rows_data
         .iter()
