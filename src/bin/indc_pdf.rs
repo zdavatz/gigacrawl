@@ -403,7 +403,7 @@ fn main() {
     // RIGHT: key dates + context. `ry` is treated as the BASELINE of the next
     // line throughout (paragraph() uses the same convention).
     pdf.line(right_x, by(top),
-        "Wichtige Termine (BAG Rundschreiben 19.02.2026)",
+        "Wichtige Termine (Rundschreiben 19.02.2026)",
         true, 11.0, title_c.clone(), None);
     let mut ry = top + 16.0;
     pdf.line(right_x, by(ry), "01.07.2026", true, 9.5, warn.clone(), None);
