@@ -31,6 +31,9 @@ const BAG_RUNDSCHREIBEN: &str = "https://www.spezialitaetenliste.ch/";
 const EPL_BAG: &str = "https://epl.bag.admin.ch";
 const CPP2SQLITE: &str = "https://github.com/zdavatz/cpp2sqlite";
 const INDC_XLSX: &str = "https://github.com/zdavatz/gigacrawl/blob/main/xlsx/indc.xlsx";
+const GENERIKA_IOS: &str = "https://apps.apple.com/ch/app/generika/id520038123";
+const GENERIKA_PLAY: &str = "https://play.google.com/store/apps/details?id=org.oddb.generika";
+const GENERIKA_GITHUB: &str = "https://github.com/zdavatz/generikacc";
 
 fn rgb(r: u8, g: u8, b: u8) -> Color {
     Color::Rgb(Rgb::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0, None))
@@ -429,9 +432,28 @@ fn main() {
         "Stand 01.01.2026 tragen rund 170 SL-Arzneimittel die PM-Kennzeichnung («Ja»/«Nein»).",
         8.5, ink.clone(), right_w);
 
+    // ---- Generika App callout (page 1, spans both columns) ----
+    let mut app_y = atc_bottom.max(ry) + 16.0;
+    pdf.line(MARGIN_X, by(app_y),
+        "Generika App — bereits IndC-ready",
+        true, 11.0, title_c.clone(), None);
+    app_y += 13.0;
+    app_y = pdf.paragraph(MARGIN_X, app_y,
+        "Das in der iOS- und Android-App enthaltene Kostengutsprache-Formular (KVV 71) verfügt über einen integrierten Indikationscode-Auswähler: die XXXXX.NN-Codes werden direkt aus der SL gezogen, der zugehörige Limitations-Text wird live angezeigt und die Auswahl in den exportierten PDF/E-Mail-Versand eingebettet.",
+        8.5, ink.clone(), fw) + 4.0;
+    let ios = "iOS App Store \u{2197}";
+    pdf.line(MARGIN_X, by(app_y), ios, true, 8.5, link_c.clone(), Some(GENERIKA_IOS));
+    let mut alx = MARGIN_X + pdf.width(ios, true, 8.5) * WRAP_FUDGE + 16.0;
+    let play = "Google Play \u{2197}";
+    pdf.line(alx, by(app_y), play, true, 8.5, link_c.clone(), Some(GENERIKA_PLAY));
+    alx += pdf.width(play, true, 8.5) * WRAP_FUDGE + 16.0;
+    let gh = "Quellcode (zdavatz/generikacc) \u{2197}";
+    pdf.line(alx, by(app_y), gh, false, 8.5, link_c.clone(), Some(GENERIKA_GITHUB));
+    app_y += 14.0;
+
     // Footer / sources for page 1. Apply WRAP_FUDGE to link-text widths since
     // ab_glyph under-measures vs. the actual rendered advance.
-    let foot = atc_bottom.max(ry) + 14.0;
+    let foot = app_y + 6.0;
     let label = "Quellen:";
     pdf.line(MARGIN_X, by(foot), label, true, 8.5, title_c.clone(), None);
     let mut lx = MARGIN_X + pdf.width(label, true, 8.5) * WRAP_FUDGE + 10.0;

@@ -139,7 +139,8 @@ fn main() {
 
     // ---- Footnotes ----
     let footnotes = [
-        "Quelle: BAG SL FHIR ndjson (epl.bag.admin.ch), ausgelesen mit cpp2sqlite (github.com/zdavatz/cpp2sqlite). Format Indikationscode: XXXXX.NN — fünfstellige BAG-Dossiernummer + zweistellige Indikations-Nummer.",
+        "Generika App (iOS + Android, ywesee GmbH): Kostengutsprache-Formular (KVV 71) mit integriertem Indikationscode-Auswähler — die XXXXX.NN-Codes werden direkt aus der SL gezogen, der Limitations-Text live angezeigt, die Auswahl in den exportierten PDF/E-Mail-Versand eingebettet.  iOS: apps.apple.com/ch/app/generika/id520038123  ·  Android: play.google.com/store/apps/details?id=org.oddb.generika  ·  Quellcode: github.com/zdavatz/generikacc",
+        "Quelle: BAG SL FHIR ndjson (epl.bag.admin.ch), ausgelesen mit cpp2sqlite (github.com/zdavatz/cpp2sqlite). Rohdaten: github.com/zdavatz/gigacrawl/blob/main/xlsx/indc.xlsx. Format Indikationscode: XXXXX.NN — fünfstellige BAG-Dossiernummer + zweistellige Indikations-Nummer.",
         "Hintergrund: bei Arzneimitteln mit Preismodell wird der SL-Listenpreis vergütet; ein Teil des Fabrikabgabepreises fliesst als Rückerstattung vom Pharmaunternehmen an den Versicherer zurück. Der IndC erlaubt die eindeutige Zuordnung Arzneimittel ↔ Indikation ↔ Rückerstattung.",
         "Fristen (BAG Rundschreiben vom 19.02.2026): 01.07.2026 — Übermittlung des IndC mit jeder Verordnung und Rechnung;  01.01.2027 — Krankenversicherer dürfen Rechnungen ohne IndC zurückweisen.",
     ];
