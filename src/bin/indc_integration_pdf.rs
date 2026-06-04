@@ -352,9 +352,8 @@ fn main() {
     top += 18.0;
 
     // Pipeline strip — coloured boxes
-    let boxes: [(&str, &str, Color); 6] = [
+    let boxes: [(&str, &str, Color); 5] = [
         ("BAG SL FHIR",     "epl.bag.admin.ch\n(NDJSON, täglich)", rgb(30, 58, 95)),
-        ("cpp2sqlite",      "FHIR → SQLite + XML\n(open source)",  rgb(37, 99, 165)),
         ("oddb2xml",        "<INDIKATIONSCODE>\n<INDIKATIONSCODE_TEXT>", rgb(13, 71, 161)),
         ("Praxis-Software", "GTIN-Lookup, UI-Dropdown,\nPersistenz pro Patient",  rgb(21, 101, 52)),
         ("KVV-71 / Rezept", "IndC eingebettet in PDF\nund CHMED16A QR",  rgb(146, 64, 14)),
