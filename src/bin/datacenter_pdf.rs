@@ -405,7 +405,7 @@ fn main() {
         },
         Row {
             company: "xAI",
-            operational: "~2 GW (Colossus, Memphis)",
+            operational: "~0.8 GW live, ~2 GW total/building (Colossus, Memphis)",
             planned: "Further expansions (roadmap to much larger)",
             capex: "Private",
             cost_gw: "~$9–15B/GW (all-in)",

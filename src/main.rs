@@ -477,7 +477,7 @@ fn main() {
         ],
         [
             Cell::new("xAI", Style::Bold, COMPANY_FG),
-            Cell::new("~2 GW (Colossus, Memphis)", Style::Regular, CELL_FG),
+            Cell::new("~0.8 GW live, ~2 GW total/building (Colossus, Memphis)", Style::Regular, CELL_FG),
             Cell::new(
                 "Further expansions (roadmap to much larger)",
                 Style::Regular,
