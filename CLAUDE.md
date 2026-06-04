@@ -72,7 +72,11 @@ applied in both files:
   hyperlinks (`Op::LinkAnnotation` with `Actions::Uri`). Page 1: the capacity
   table (`rows: [Row; _]`). Page 2: the SEC-financials table (`[Sec; _]`) plus a
   **PP&E-composition** table (compute/servers vs. real estate vs.
-  construction-in-progress vs. finance-lease ROU, FY2025 gross per 10-K). Page 3:
+  construction-in-progress vs. finance-lease ROU, FY2025 gross per filing). Note
+  **Nebius** (NBIS) is a foreign private issuer: it files Form **20-F** (US GAAP),
+  not a 10-K, so its source links read "20-F ↗" — the `Sec` struct carries a
+  `form` field for the SEC table, and the PP&E-composition label switches on
+  `co.starts_with("Nebius")`. Page 3:
   **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates* — press/
   analyst, not SEC. The two later tables are drawn by the reusable
   `Pdf::draw_table` helper (header band + alternating rows + grid; each cell is
@@ -140,6 +144,17 @@ applied in both files:
 ## Data sources
 
 Financial figures (capex, PP&E, lease commitments, guidance) come from FY2025
-10-Ks via SEC EDGAR (`data.sec.gov`); the 10-K URLs are hard-coded in
-`datacenter_pdf.rs`. Gigawatt capacities and site locations are
-press/analyst-sourced — SEC filings do not state capacity in gigawatts.
+10-Ks via SEC EDGAR (`data.sec.gov`) — except **Nebius**, a foreign private
+issuer whose figures come from its FY2025 Form **20-F** (US GAAP). The filing
+URLs are hard-coded in `datacenter_pdf.rs`. Gigawatt capacities and site
+locations are press/analyst-sourced — SEC filings do not state capacity in
+gigawatts. Note **Nebius** and **CoreWeave** are **neoclouds** (they rent Nvidia
+GPU capacity rather than operating purely for itself); their page-1 "operational"
+figure is connected/active power, with contracted power (>3.5 GW each) shown
+under "planned". CoreWeave (CRWV) is a domestic 10-K filer (so no `form`
+special-casing) but is the **leased/leveraged** contrast to Nebius's owned model:
+it leases its data centers (operating-lease ROU $8.23B) and is financed by ~$21.4B
+of debt rather than equity — its leverage is in borrowings, not GAAP finance
+leases ($0.44B) — so its capex÷OCF (337%) is far lower than Nebius's (1057%)
+because it generates real operating cash flow yet still runs a net loss on
+interest expense (footnote ⁶ on page 2).

@@ -285,7 +285,7 @@ struct Pal {
     outer: Color,
 }
 
-/// One public company's audited FY2025 10-K figures (page 2).
+/// One public company's audited FY2025 annual-report figures (page 2).
 struct Sec {
     company: &'static str,
     capex23: &'static str,
@@ -296,6 +296,8 @@ struct Sec {
     ratio: &'static str,
     leases: &'static str,
     url: &'static str,
+    /// Source-link label — "10-K ↗" for domestic filers, "20-F ↗" for Nebius.
+    form: &'static str,
 }
 
 const AMZN: &str = "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm";
@@ -304,6 +306,9 @@ const GOOG: &str = "https://www.sec.gov/Archives/edgar/data/1652044/000165204426
 const GOOG_FWP: &str = "https://www.sec.gov/Archives/edgar/data/1652044/000119312526251733/d160205dfwp.htm";
 const META: &str = "https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm";
 const ORCL: &str = "https://www.sec.gov/Archives/edgar/data/1341439/000095017025087926/orcl-20250531.htm";
+// Nebius is a foreign private issuer — files Form 20-F (US GAAP), not 10-K.
+const NBIS: &str = "https://www.sec.gov/Archives/edgar/data/1513845/000110465926052948/nbis-20251231x20f.htm";
+const CRWV: &str = "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000104/crwv-20251231.htm";
 const XAI: &str = "https://x.ai/news/anthropic-compute-partnership";
 const OPENAI: &str = "https://openai.com/index/five-new-stargate-sites/";
 const ANTHROPIC: &str = "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure";
@@ -343,7 +348,7 @@ fn main() {
         "Company",
         "Operational (GW)",
         "Planned / Under Construction",
-        "FY2025 Capex (10-K)",
+        "FY2025 Capex (SEC)",
         "Est. $/GW (flagship)",
         "Key Sites & Power (location · GW)",
         "Key Notes",
@@ -404,6 +409,16 @@ fn main() {
             notes: "RPO backlog $553B (Q3 FY2026), mostly large AI contracts. FY2026 capex guided ~$50B. Reported ~$300B/5-yr OpenAI compute deal. FY ends May.",
         },
         Row {
+            company: "CoreWeave (CRWV)",
+            operational: "~1 GW active (→>1.7 GW by end-2026; 43 data centers)",
+            planned: ">3.5 GW contracted; 5+ GW w/ Nvidia by 2030 — heavily leased",
+            capex: "$10.31B",
+            cost_gw: "— (n/d)",
+            links: &[("10-K ↗", CRWV)],
+            sites: "43 leased data centers (US + Europe). First to deploy GB300 NVL72; first Vera Rubin NVL72 bring-up (Jun 2026, with Dell)",
+            notes: "Neocloud — rents Nvidia GPU capacity; leases its DCs, funded by ~$21B debt (9%+ notes). OpenAI ~$22.4B & Meta ~$35B contracts; Nvidia $6.3B take-or-pay backstop. Microsoft ~62% of revenue. RPO $60.7B (10-K). Net loss $1.2B. Ex-crypto miner; IPO Mar 2025.",
+        },
+        Row {
             company: "xAI",
             operational: "~0.8 GW live, ~2 GW total/building (Colossus, Memphis)",
             planned: "Further expansions (roadmap to much larger)",
@@ -412,6 +427,16 @@ fn main() {
             links: &[("source ↗", XAI)],
             sites: "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
             notes: "Colossus 2 among first ~GW-scale single sites. Colossus 1 output leased to Anthropic ($1.25B/mo through 2029).",
+        },
+        Row {
+            company: "Nebius (NBIS)",
+            operational: "~0.5 GW connected (→0.8–1 GW by end-2026)",
+            planned: ">3.5 GW contracted (→>4 GW by end-2026); >75% owned",
+            capex: "$4.07B",
+            cost_gw: "— (n/d)",
+            links: &[("20-F ↗", NBIS)],
+            sites: "Owned ~3 GW / 5 sites: Independence, MO (1.2 GW) · Vineland, NJ (Microsoft) · Pennsylvania (→1.2 GW, 2027) · Alabama (2027) · Finland (310 MW). GB300 NVL72; early Vera Rubin",
+            notes: "Neocloud — rents Nvidia GPU capacity. Meta deal up to $27B/5 yr; Microsoft up to $19.4B thru 2031. RPO backlog $21.3B (20-F). FY ends Dec. Ex-Yandex; on Nasdaq since Oct 2024.",
         },
         Row {
             company: "OpenAI",
@@ -560,7 +585,7 @@ fn main() {
 
     // ---- Footer ----
     let foot = table_top + table_h + 14.0;
-    pdf.line(MARGIN_X, by(foot), "Capex = purchases of property & equipment (latest annual 10-K). Click a source link in the Capex column to open the filing. GW figures are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(foot), "Capex = purchases of property & equipment (latest annual 10-K, or 20-F for Nebius). Click a source link in the Capex column to open the filing. GW figures are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(foot + 11.0), "Est. $/GW = flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.", false, 7.2, gray.clone(), None);
 
     // Page 1 done — capture its ops.
@@ -570,15 +595,19 @@ fn main() {
     // Sorted by FY2025 capex, descending.
     let secs = [
         Sec { company: "Amazon (AWS)", capex23: "$52.7B", capex24: "$83.0B", capex25: "$131.8B",
-              ppe: "$357.0B  (+41%)", ocf: "$139.5B", ratio: "94%", leases: "$96.4B", url: AMZN },
+              ppe: "$357.0B  (+41%)", ocf: "$139.5B", ratio: "94%", leases: "$96.4B", url: AMZN, form: "10-K ↗" },
         Sec { company: "Alphabet (Google)", capex23: "$32.3B", capex24: "$52.5B", capex25: "$91.4B",
-              ppe: "$246.6B  (+44%)", ocf: "$164.7B", ratio: "56%", leases: "$58.5B", url: GOOG },
+              ppe: "$246.6B  (+44%)", ocf: "$164.7B", ratio: "56%", leases: "$58.5B", url: GOOG, form: "10-K ↗" },
         Sec { company: "Meta Platforms", capex23: "$27.3B", capex24: "$37.3B", capex25: "$69.7B",
-              ppe: "$176.4B  (+45%)", ocf: "$115.8B", ratio: "60%", leases: "$103.8B", url: META },
+              ppe: "$176.4B  (+45%)", ocf: "$115.8B", ratio: "60%", leases: "$103.8B", url: META, form: "10-K ↗" },
         Sec { company: "Microsoft (Azure)", capex23: "$28.1B", capex24: "$44.5B", capex25: "$64.6B",
-              ppe: "$205.0B  (+51%)", ocf: "$136.2B", ratio: "47%", leases: "$92.7B", url: MSFT },
+              ppe: "$205.0B  (+51%)", ocf: "$136.2B", ratio: "47%", leases: "$92.7B", url: MSFT, form: "10-K ↗" },
         Sec { company: "Oracle (OCI)", capex23: "$8.7B", capex24: "$6.9B", capex25: "$21.2B",
-              ppe: "$43.5B  (+102%)", ocf: "$20.8B", ratio: "102%", leases: "$43.4B", url: ORCL },
+              ppe: "$43.5B  (+102%)", ocf: "$20.8B", ratio: "102%", leases: "$43.4B", url: ORCL, form: "10-K ↗" },
+        Sec { company: "CoreWeave (CRWV)", capex23: "$2.94B", capex24: "$8.70B", capex25: "$10.31B",
+              ppe: "$30.56B  (+156%)", ocf: "$3.06B", ratio: "337%", leases: "$38.5B", url: CRWV, form: "10-K ↗" },
+        Sec { company: "Nebius (NBIS)", capex23: "$0.08B", capex24: "$0.81B", capex25: "$4.07B",
+              ppe: "$5.55B  (+556%)", ocf: "$0.38B", ratio: "1057%", leases: "$9.76B", url: NBIS, form: "20-F ↗" },
     ];
     let s_head = [
         "Company",
@@ -600,9 +629,9 @@ fn main() {
     let s_x = (PAGE_W - s_w.iter().sum::<f32>()) / 2.0;
 
     let mut t2 = 24.0f32;
-    pdf.line(MARGIN_X, by(t2), "FY2025 SEC 10-K Financials — AI Data-Center Capex & Commitments", true, 15.0, title_c.clone(), None);
+    pdf.line(MARGIN_X, by(t2), "FY2025 SEC Financials — AI Data-Center Capex & Commitments", true, 15.0, title_c.clone(), None);
     t2 += 15.0;
-    pdf.line(MARGIN_X, by(t2), "Audited figures from each company's latest Form 10-K (SEC EDGAR), sorted by FY2025 capex. Private operators (xAI, OpenAI, Anthropic) file no SEC reports and are omitted.", false, 9.0, gray.clone(), None);
+    pdf.line(MARGIN_X, by(t2), "Audited figures from each company's latest annual report on SEC EDGAR (Form 10-K, or 20-F for Nebius), sorted by FY2025 capex. Private operators (xAI, OpenAI, Anthropic) file no SEC reports and are omitted.", false, 9.0, gray.clone(), None);
     t2 += 14.0;
 
     let s_top = t2 + 6.0;
@@ -612,7 +641,7 @@ fn main() {
     let s_head_h = s_head_lines * lh + pad_y * 2.0;
 
     let s_rowtexts: Vec<[&str; 9]> = secs.iter().map(|s| {
-        [s.company, s.capex23, s.capex24, s.capex25, s.ppe, s.ocf, s.ratio, s.leases, "10-K ↗"]
+        [s.company, s.capex23, s.capex24, s.capex25, s.ppe, s.ocf, s.ratio, s.leases, s.form]
     }).collect();
     let s_wrapped: Vec<[Vec<String>; 9]> = s_rowtexts.iter().map(|t| {
         std::array::from_fn(|i| pdf.wrap(t[i], s_bold[i], cell, s_w[i] - pad_x * 2.0))
@@ -675,10 +704,11 @@ fn main() {
     }
     // Footnotes
     let f2 = s_top + s_table_h + 16.0;
-    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30, Oracle's May 31; Amazon, Alphabet & Meta end December 31). Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30, Oracle's May 31; Amazon, Alphabet, Meta, CoreWeave & Nebius end December 31). Nebius is a foreign private issuer — it files Form 20-F (US GAAP), not 10-K. Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 11.0), "PP&E (property, plant & equipment), net = book value of long-lived physical assets (land, buildings, servers, network gear) after depreciation; Alphabet & Meta include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 22.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
     pdf.line(MARGIN_X, by(f2 + 33.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
+    pdf.line(MARGIN_X, by(f2 + 44.0), "Read leverage, not just the ratio: a low capex÷OCF can mask heavy debt. CoreWeave (337%) carries ~$21.4B of debt and a $1.2B net loss, while Nebius (1057%) holds ~$4B debt, >$9B cash, and is profitable — the reverse of what the ratio alone suggests.", true, 7.4, site_c.clone(), None);
 
     // ----- Page 2, lower: PP&E composition — compute/servers vs. real estate -----
     let pal = Pal {
@@ -690,7 +720,7 @@ fn main() {
         outer: outer.clone(),
     };
     let mut t3 = f2 + 33.0 + 30.0;
-    pdf.line(MARGIN_X, by(t3), "Where the capital sits — compute/servers vs. real estate (FY2025 gross PP&E, from each 10-K)", true, 13.0, title_c.clone(), None);
+    pdf.line(MARGIN_X, by(t3), "Where the capital sits — compute/servers vs. real estate (FY2025 gross PP&E, from each SEC filing)", true, 13.0, title_c.clone(), None);
     t3 += 13.0;
     pdf.line(MARGIN_X, by(t3), "The audited equipment-vs-plant split that page 1's $/GW estimates approximate. GPUs sit in the \"compute\" bucket; SEC filings do not isolate GPU spend.", false, 8.5, gray.clone(), None);
     t3 += 13.0;
@@ -705,23 +735,26 @@ fn main() {
     ];
     let comp_w = [110.0f32, 172.0, 152.0, 110.0, 122.0, 120.0]; // 786
     // Ordered by FY2025 capex (matches the table above).
-    let comp_cells: [(&str, &str, &str, &str, &str, &str); 5] = [
+    let comp_cells: [(&str, &str, &str, &str, &str, &str); 7] = [
         ("Amazon (AWS)", "$172.5B  servers & networking", "$155.1B  land & buildings", "$71.7B", "in land & bldg¹", AMZN),
         ("Alphabet (Google)", "~$122B  \u{2248}60% of tech. infra²", "~$82B DC bldg + $48.3B office²", "$78.6B  not yet in service", "embedded²", GOOG),
         ("Meta Platforms", "$98.0B  servers & network assets", "$59.3B  buildings + land", "$50.5B", "$8.2B", META),
         ("Microsoft (Azure)", "$132.8B  computer equip. & sw", "$159.4B  bldg + land + leasehold", "\u{2014}³", "$44.0B  (net)", MSFT),
         ("Oracle (OCI)", "$30.3B  computer, network & equip.", "$10.9B buildings + $1.4B land", "$16.5B  (mostly DC compute)\u{2074}", "$2.9B  (in PP&E, net)", ORCL),
+        ("CoreWeave (CRWV)", "$20.9B  technology (GPU) equip.", "leases its data centers\u{2076}", "$9.38B  construction in progress", "$0.44B fin. / $8.23B op. ROU\u{2076}", CRWV),
+        ("Nebius (NBIS)", "$3.12B  server & network equip.", "$0.38B buildings + land", "$2.42B  assets not yet in use", "none\u{2075}  (op. leases only)", NBIS),
     ];
     let comp_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = comp_cells
         .iter()
         .map(|(co, compute, re, cip, fl, url)| {
+            let label = if co.starts_with("Nebius") { "20-F \u{2197}" } else { "10-K \u{2197}" };
             vec![
                 (co.to_string(), true, company_c.clone(), None),
                 (compute.to_string(), true, capex_c.clone(), None),
                 (re.to_string(), false, ink.clone(), None),
                 (cip.to_string(), false, ink.clone(), None),
                 (fl.to_string(), false, ink.clone(), None),
-                ("10-K \u{2197}".to_string(), false, link_c.clone(), Some(url.to_string())),
+                (label.to_string(), false, link_c.clone(), Some(url.to_string())),
             ]
         })
         .collect();
@@ -729,11 +762,13 @@ fn main() {
 
     let fw = PAGE_W - 2.0 * MARGIN_X;
     let mut cf = comp_bottom + 14.0;
-    cf = pdf.paragraph(MARGIN_X, cf, "All figures are FY2025 gross (at cost) from each 10-K's property & equipment note, except finance-lease right-of-use assets (net). Category labels differ by filer; the \"compute\" column is each company's own server/equipment bucket — SEC filings do not isolate GPU spend.", 7.2, gray.clone(), fw) + 2.0;
+    cf = pdf.paragraph(MARGIN_X, cf, "All figures are FY2025 gross (at cost) from each filing's property & equipment note, except finance-lease right-of-use assets (net). Category labels differ by filer; the \"compute\" column is each company's own server/equipment bucket — SEC filings do not isolate GPU spend.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "¹ Amazon reports land and buildings as one line (finance-lease property included within it) and its PP&E also holds large non-data-center fulfilment/logistics assets (heavy & other equipment $128.9B), so its compute share understates data-center intensity.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "² Alphabet's 10-K states ~60% of \"technical infrastructure\" ($203.7B) is servers & network equipment (\u{2248}$122B); the rest (\u{2248}$82B) is data-center land/buildings. Office space ($48.3B) is separate; finance-lease ROU is embedded in PP&E, not itemized.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "³ Microsoft presents PP&E at cost with no construction-in-progress line ($32.1B committed for datacenter/building construction at fiscal year-end); its $44.0B net finance-lease right-of-use assets are reported in the leases note, not in the PP&E table.", 7.2, gray.clone(), fw) + 2.0;
-    pdf.paragraph(MARGIN_X, cf, "\u{2074} Oracle (FY ended May 31, 2025): gross PP&E $59.6B; its construction-in-progress \"primarily consist[s] of computer equipment to be built and deployed at our data centers\" (10-K), so most of the $16.5B is compute. Finance-lease ROU ($2.9B net) sits inside PP&E; operating-lease ROU ($13.1B) is in other assets, and ~$43.4B of leases had not yet commenced.", 7.2, gray.clone(), fw);
+    cf = pdf.paragraph(MARGIN_X, cf, "\u{2074} Oracle (FY ended May 31, 2025): gross PP&E $59.6B; its construction-in-progress \"primarily consist[s] of computer equipment to be built and deployed at our data centers\" (10-K), so most of the $16.5B is compute. Finance-lease ROU ($2.9B net) sits inside PP&E; operating-lease ROU ($13.1B) is in other assets, and ~$43.4B of leases had not yet commenced.", 7.2, gray.clone(), fw) + 2.0;
+    cf = pdf.paragraph(MARGIN_X, cf, "\u{2075} Nebius (FY2025 20-F, US GAAP): gross PP&E $6.19B. \"Assets not yet in use\" ($2.42B) is its construction-in-progress proxy. It reports operating leases only (ROU $0.92B) — no finance leases — plus ~$9.76B of leases not yet commenced (undiscounted), the SEC-filed proxy for its data-center pipeline.", 7.2, gray.clone(), fw) + 2.0;
+    pdf.paragraph(MARGIN_X, cf, "\u{2076} CoreWeave (FY2025 10-K) leases its data centers — operating-lease ROU $8.23B, owning little real estate — so its GAAP finance leases are small ($0.44B). Its leverage is debt, not leases: ~$21.4B of borrowings (GPU-collateralized term loans + 9%+ senior notes), plus $38.5B of leases not yet commenced. FY2025 RPO (backlog) $60.7B; net loss $1.17B, driven by interest on that debt.", 7.2, gray.clone(), fw);
 
     let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 

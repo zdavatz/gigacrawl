@@ -12,11 +12,12 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   styled table (title, header band, alternating rows, wrapped cells).
 - [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **3 pages**, A4
   landscape: (1) the same table, where each row's **Capex** cell carries a
-  clickable source link (public → FY2025 **10-K on sec.gov**; private → primary
-  announcement); (2) a **SEC financials** page (capex FY23–25, PP&E, operating
-  cash flow, capex÷OCF, leases-not-yet-commenced) plus a **PP&E composition**
-  table splitting audited PP&E into compute/servers vs. real estate vs.
-  construction-in-progress vs. finance-lease ROU, each row linked to its 10-K;
+  clickable source link (public → FY2025 **10-K on sec.gov**, or **20-F** for
+  Nebius; private → primary announcement); (2) a **SEC financials** page (capex
+  FY23–25, PP&E, operating cash flow, capex÷OCF, leases-not-yet-commenced) plus a
+  **PP&E composition** table splitting audited PP&E into compute/servers vs. real
+  estate vs. construction-in-progress vs. finance-lease ROU, each row linked to
+  its filing;
   (3) a **private operators** page with press/analyst estimates of the
   GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
   (clearly separated from the SEC pages, as none of the three file with the SEC).
@@ -24,7 +25,11 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   demand by `--post-sec`).
 
 Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, Oracle (OCI),
-xAI, OpenAI, Anthropic — ordered by estimated operational GW.
+CoreWeave (CRWV), xAI, Nebius (NBIS), OpenAI, Anthropic — ordered by estimated
+operational GW. CoreWeave and Nebius are **neoclouds** (they rent Nvidia GPU
+capacity) and both file with the SEC — but CoreWeave is a domestic 10-K filer,
+while Nebius is a foreign private issuer whose audited figures come from a Form
+**20-F**; the source links in the tables are labelled accordingly.
 
 ## Build & run
 

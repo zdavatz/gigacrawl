@@ -476,6 +476,31 @@ fn main() {
             ),
         ],
         [
+            Cell::new("CoreWeave (CRWV)", Style::Bold, COMPANY_FG),
+            Cell::new(
+                "~1 GW active (→>1.7 GW by end-2026; 43 data centers)",
+                Style::Regular,
+                CELL_FG,
+            ),
+            Cell::new(
+                ">3.5 GW contracted; 5+ GW w/ Nvidia by 2030 — heavily leased",
+                Style::Regular,
+                CELL_FG,
+            ),
+            Cell::new("$10.31B", Style::Bold, CAPEX_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
+            Cell::new(
+                "43 leased data centers (US + Europe). First to deploy GB300 NVL72; first Vera Rubin NVL72 bring-up (Jun 2026, with Dell)",
+                Style::Regular,
+                SITE_FG,
+            ),
+            Cell::new(
+                "Neocloud — rents Nvidia GPU capacity; leases its DCs, funded by ~$21B debt (9%+ notes). OpenAI ~$22.4B & Meta ~$35B contracts; Nvidia $6.3B take-or-pay backstop. Microsoft ~62% of revenue. RPO $60.7B (10-K). Net loss $1.2B. Ex-crypto miner; IPO Mar 2025.",
+                Style::Regular,
+                NOTE_FG,
+            ),
+        ],
+        [
             Cell::new("xAI", Style::Bold, COMPANY_FG),
             Cell::new("~0.8 GW live, ~2 GW total/building (Colossus, Memphis)", Style::Regular, CELL_FG),
             Cell::new(
@@ -492,6 +517,31 @@ fn main() {
             ),
             Cell::new(
                 "Colossus 2 is among the first ~GW-scale single sites. Colossus 1 output now committed to Anthropic ($1.25B/mo through 2029).",
+                Style::Regular,
+                NOTE_FG,
+            ),
+        ],
+        [
+            Cell::new("Nebius (NBIS)", Style::Bold, COMPANY_FG),
+            Cell::new(
+                "~0.5 GW connected (→0.8–1 GW by end-2026)",
+                Style::Regular,
+                CELL_FG,
+            ),
+            Cell::new(
+                ">3.5 GW contracted (→>4 GW by end-2026); >75% owned",
+                Style::Regular,
+                CELL_FG,
+            ),
+            Cell::new("$4.07B", Style::Bold, CAPEX_FG),
+            Cell::new("— (n/d)", Style::Regular, NOTE_FG),
+            Cell::new(
+                "Owned ~3 GW / 5 sites: Independence, MO (1.2 GW) · Vineland, NJ (Microsoft) · Pennsylvania (→1.2 GW, 2027) · Alabama (2027) · Finland (310 MW). GB300 NVL72; early Vera Rubin",
+                Style::Regular,
+                SITE_FG,
+            ),
+            Cell::new(
+                "Neocloud — rents Nvidia GPU capacity. Meta deal up to $27B/5 yr; Microsoft up to $19.4B thru 2031. RPO backlog $21.3B (20-F). FY ends Dec. Ex-Yandex; on Nasdaq since Oct 2024.",
                 Style::Regular,
                 NOTE_FG,
             ),
@@ -551,7 +601,7 @@ fn main() {
     let footnotes: [&str; 3] = [
         "¹ Meta 10-K (FY2025): \"We anticipate making capital expenditures of approximately $115 billion to $135 billion in 2026 to support our AI efforts and core business.\"",
         "² Est. $/GW = a company's flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry benchmark ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.",
-        "Capex = purchases of property & equipment from the latest annual 10-K cash-flow statement (Microsoft FY ends June, Oracle FY ends May; Amazon/Alphabet/Meta FY ends December). xAI, OpenAI & Anthropic are private and do not file with the SEC. GW capacity figures and site details are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.",
+        "Capex = purchases of property & equipment from the latest annual SEC filing's cash-flow statement (Microsoft FY ends June, Oracle FY ends May; Amazon/Alphabet/Meta/CoreWeave/Nebius FY ends December). Nebius is a foreign private issuer and files Form 20-F (US GAAP), not 10-K. xAI, OpenAI & Anthropic are private and do not file with the SEC. GW capacity figures and site details are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.",
     ];
 
     // ---- Pre-compute wrapped lines per cell to derive row heights ----
