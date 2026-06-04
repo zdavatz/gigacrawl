@@ -21,7 +21,6 @@ const MARGIN_X: f32 = 32.0;
 const WRAP_FUDGE: f32 = 1.14;
 
 const ODDB2XML_GITHUB: &str = "https://github.com/zdavatz/oddb2xml";
-const CPP2SQLITE_GITHUB: &str = "https://github.com/zdavatz/cpp2sqlite";
 const EPL_BAG: &str = "https://epl.bag.admin.ch";
 const GENERIKA_IOS: &str = "https://apps.apple.com/ch/app/generika/id520038123";
 
@@ -331,9 +330,6 @@ fn main() {
     let l2 = "BAG SL FHIR-Feed ↗";
     pdf.line(lx, by(foot), l2, false, 8.5, link_c.clone(), Some(EPL_BAG));
     lx += pdf.width(l2, false, 8.5) * WRAP_FUDGE + 14.0;
-    let l3 = "cpp2sqlite ↗";
-    pdf.line(lx, by(foot), l3, false, 8.5, link_c.clone(), Some(CPP2SQLITE_GITHUB));
-    lx += pdf.width(l3, false, 8.5) * WRAP_FUDGE + 14.0;
     pdf.line(lx, by(foot), "Generika.cc App (Referenz-Implementierung) ↗", false, 8.5, link_c.clone(), Some(GENERIKA_IOS));
 
     let page1 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
@@ -485,7 +481,7 @@ fn main() {
     // Footer
     let foot = ly.max(ry) + 16.0;
     pdf.paragraph(MARGIN_X, foot,
-        "Bei Fragen zur Integration, Mapping-Datei (CSV/JSON/SQLite-Snapshot), API-Endpoint oder gemeinsamem Test mit einer Praxis-Software: einfach melden. Open Source — oddb2xml, cpp2sqlite und die Generika.cc App sind auf GitHub und auf den Stores verfügbar.",
+        "Bei Fragen zur Integration, Mapping-Datei (CSV/JSON/SQLite-Snapshot), API-Endpoint oder gemeinsamem Test mit einer Praxis-Software: einfach melden. Open Source — oddb2xml und die Generika.cc App sind auf GitHub und auf den Stores verfügbar.",
         8.5, gray.clone(), fw);
 
     let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
