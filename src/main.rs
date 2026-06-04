@@ -140,6 +140,86 @@ fn main() {
         return;
     }
 
+    // `--post-indc-doc`: post pdf/indc_overview.pdf to LinkedIn as a NATIVE
+    // document (Documents API), identical mechanism to --post-pdf-doc but with
+    // the IndC caption. LinkedIn only.
+    if args.iter().any(|a| a == "--post-indc-doc") {
+        let pdf_path = std::path::Path::new("pdf/indc_overview.pdf");
+        if !pdf_path.exists() {
+            eprintln!("pdf/indc_overview.pdf not found — run `indc_pdf` first");
+            std::process::exit(1);
+        }
+        let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/indc_overview.pdf";
+        let xlsx_url = "github.com/zdavatz/gigacrawl/blob/main/xlsx/indc.xlsx";
+        let ios_url = "apps.apple.com/ch/app/generika/id520038123";
+        let play_url = "play.google.com/store/apps/details?id=org.oddb.generika";
+        let caption = format!(
+            "🇨🇭 Ab 01.07.2026 wird der Indikationscode (IndC) zur SL-Pflichtangabe — ab 01.01.2027 dürfen Versicherer Rechnungen ohne ihn zurückweisen.\n\n\
+            Wir haben uns angesehen, was das in der Praxis bedeutet, und den BAG-SL-FHIR-Feed mit unserem Open-Source-Werkzeug cpp2sqlite durchgekämmt:\n\n\
+            • 1'419 IndC-Zeilen, 571 distinkte XXXXX.NN-Codes, 264 BAG-Dossiernummern, 524 Markennamen\n\
+            • 77 % der Codes entfallen auf ATC L (Onkologie / Immunmodulatoren) — genau jener Bereich mit den höchsten Rückerstattungen\n\
+            • Preisspanne der betroffenen Präparate: CHF 3.30 – 82'239.72 ex-factory (Faktor ~25'000)\n\
+            • Spitzenreiter bei den Codes: ein einziges Keytruda-Präparat trägt 23 unterschiedliche IndC — einer pro vergüteter Indikation, jeder mit eigenem Preismodell\n\n\
+            Hintergrund: Bei Arzneimitteln mit Preismodell vergütet die Kasse den SL-Listenpreis, ein Teil des FAP fliesst nachträglich vom Pharmaunternehmen zurück. Der IndC ist die einzige saubere Brücke zwischen Arzneimittel ↔ Indikation ↔ Rückerstattung — und damit Voraussetzung der Wirtschaftlichkeit nach KVG Art. 42 Abs. 3.\n\n\
+            Wir haben den IndC bereits End-to-End integriert:\n\
+            – im Datenpipeline-Tool cpp2sqlite → SQLite-Spalten indikationscode / indikationscode_text\n\
+            – in der Generika.cc App (iOS + Android, ywesee GmbH): das eingebaute Kostengutsprache-Formular (KVV 71) zieht die IndC live aus der SL, zeigt den Limitations-Text inline und bettet die Auswahl in den PDF-/E-Mail-Versand ein. Bereit ab dem 01.07.2026 — ohne dass Praxen den Code von Hand aus der ePL kopieren müssen.\n\n\
+            📄 Volle Übersicht als klickbares PDF (mit allen Quellen-Links): {pdf_url}\n\
+            📊 Rohdaten (xlsx): {xlsx_url}\n\
+            📱 App: {ios_url} · {play_url}\n\n\
+            #Spezialitätenliste #Indikationscode #BAG #Krankenversicherung #DigitalHealth #OpenSource #Pharma #Schweiz"
+        );
+        let title = "Indikationscode (IndC) — SL-Pflichtangabe ab 01.07.2026";
+        match linkedin::publish_document(pdf_path, &caption, title) {
+            Ok(u) => println!("Posted IndC PDF document to LinkedIn: {u}"),
+            Err(e) => {
+                eprintln!("[linkedin] document post failed: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
+    // `--post-indc-png`: post png/indc_overview.png to LinkedIn as a standard
+    // image post with the IndC caption (mirrors --post-indc-doc but with the
+    // PNG instead of the native PDF document).
+    if args.iter().any(|a| a == "--post-indc-png") {
+        let path = std::path::Path::new("png/indc_overview.png");
+        if !path.exists() {
+            eprintln!("png/indc_overview.png not found — run `indc_chart` first");
+            std::process::exit(1);
+        }
+        let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/indc_overview.pdf";
+        let xlsx_url = "github.com/zdavatz/gigacrawl/blob/main/xlsx/indc.xlsx";
+        let ios_url = "apps.apple.com/ch/app/generika/id520038123";
+        let play_url = "play.google.com/store/apps/details?id=org.oddb.generika";
+        let caption = format!(
+            "🇨🇭 Ab 01.07.2026 wird der Indikationscode (IndC) zur SL-Pflichtangabe — ab 01.01.2027 dürfen Versicherer Rechnungen ohne ihn zurückweisen.\n\n\
+            Wir haben den BAG-SL-FHIR-Feed mit unserem Open-Source-Werkzeug cpp2sqlite durchgekämmt:\n\n\
+            • 1'419 IndC-Zeilen, 571 distinkte XXXXX.NN-Codes, 264 BAG-Dossiernummern, 524 Markennamen\n\
+            • 77 % der Codes entfallen auf ATC L (Onkologie / Immunmodulatoren)\n\
+            • Preisspanne der betroffenen Präparate: CHF 3.30 – 82'239.72 ex-factory (Faktor ~25'000)\n\
+            • Ein einziges Keytruda-Präparat trägt 23 unterschiedliche IndC — einer pro vergüteter Indikation, jeder mit eigenem Preismodell\n\n\
+            Bei Arzneimitteln mit Preismodell vergütet die Kasse den SL-Listenpreis, ein Teil des FAP fliesst nachträglich vom Pharmaunternehmen zurück. Der IndC ist die einzige saubere Brücke zwischen Arzneimittel ↔ Indikation ↔ Rückerstattung.\n\n\
+            Wir haben den IndC bereits End-to-End integriert:\n\
+            – im Datenpipeline-Tool cpp2sqlite → SQLite-Spalten indikationscode / indikationscode_text\n\
+            – in der Generika.cc App (iOS + Android, ywesee GmbH): das eingebaute Kostengutsprache-Formular (KVV 71) zieht die IndC live aus der SL, zeigt den Limitations-Text inline und bettet die Auswahl in den PDF-/E-Mail-Versand ein. Bereit ab 01.07.2026 — ohne dass Praxen den Code von Hand aus der ePL kopieren müssen.\n\n\
+            📄 PDF-Übersicht (mit klickbaren Quellen): {pdf_url}\n\
+            📊 Rohdaten (xlsx): {xlsx_url}\n\
+            📱 App: {ios_url} · {play_url}\n\n\
+            #Spezialitätenliste #Indikationscode #BAG #Krankenversicherung #DigitalHealth #OpenSource #Pharma #Schweiz"
+        );
+        let title = "Indikationscode (IndC) — SL-Pflichtangabe ab 01.07.2026";
+        match linkedin::publish_image(path, &caption, title) {
+            Ok(u) => println!("Posted IndC PNG to LinkedIn: {u}"),
+            Err(e) => {
+                eprintln!("[linkedin] post failed: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
     // `--post-png <path> <caption>`: post a single PNG as a standalone tweet
     // with the given caption. General-purpose; used e.g. to post individual PDF
     // pages on X pay-per-use, which only permits plain single-image posts.
