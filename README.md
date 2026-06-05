@@ -23,6 +23,16 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   (clearly separated from the SEC pages, as none of the three file with the SEC).
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
+- [`pdf/spacex_exposure.pdf`](pdf/spacex_exposure.pdf) — a separate one-page A4
+  landscape table of **publicly-accessible funds that already hold SpaceX**
+  (Space Exploration Technologies) equity — i.e. ways to get "pre-IPO" exposure
+  today. SpaceX is private (files only Form D), so each holder's stake is
+  disclosed in its own **Form N-PORT / N-CSR**; every row links to the verified
+  filing on sec.gov. Ordered by SpaceX share of the fund (Destiny Tech100 /
+  DXYZ, the Baron and ARK funds, StepStone, Private Shares Fund, Coatue, BCAT),
+  with footnotes on the diversified families holding small positions and the
+  Alphabet (GOOGL) historical-disclosure caveat. Built by the `spacex_exposure`
+  binary.
 
 Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, Oracle (OCI),
 CoreWeave (CRWV), xAI, Nebius (NBIS), OpenAI, Anthropic — ordered by estimated
@@ -42,6 +52,9 @@ cargo run --release --bin datacenter_chart
 
 # Generate the linked PDF table -> pdf/datacenter_sources.pdf
 cargo run --release --bin datacenter_pdf
+
+# Generate the SpaceX private-exposure PDF -> pdf/spacex_exposure.pdf
+cargo run --release --bin spacex_exposure
 ```
 
 ## Post the chart to LinkedIn
