@@ -98,7 +98,9 @@ impl<'a> Pdf<'a> {
         self.ops.push(Op::EndTextSection);
 
         if let Some(url) = url {
-            let w = self.width(text, bold, size);
+            // ab_glyph under-measures poppler's rendered advance; widen the
+            // underline + click rect so they span the full visible text.
+            let w = self.width(text, bold, size) * WRAP_FUDGE;
             self.ops.push(Op::SetOutlineColor { col: col.clone() });
             self.ops.push(Op::SetOutlineThickness { pt: Pt(0.5) });
             self.ops.push(Op::DrawLine {
