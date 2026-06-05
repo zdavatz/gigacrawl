@@ -293,6 +293,8 @@ const BARON_TRUST: &str = "https://www.sec.gov/Archives/edgar/data/810902/000141
 const BCAT: &str = "https://www.sec.gov/Archives/edgar/data/1809541/000175272425037817/primary_doc.xml";
 // Alphabet's only by-name SpaceX disclosure is its 2015 filing (now folded into "non-marketable equity").
 const GOOG_2015: &str = "https://www.sec.gov/Archives/edgar/data/1652044/000165204415000005/alpha10-qq32015.htm";
+// S&P DJI declined (4 Jun 2026) to fast-track mega-caps into the S&P 500.
+const SP_DJI: &str = "https://press.spglobal.com/2026-06-04-S-P-Dow-Jones-Indices-Consultation-on-Treatment-of-MegaCap-Companies-Results";
 
 fn main() {
     let mut warns = Vec::new();
@@ -344,9 +346,9 @@ fn main() {
     // Geometry shared with the data-center PDF.
     let cell = 7.6f32;
     let head = 7.8f32;
-    let lh = 9.4f32;
+    let lh = 9.0f32;
     let pad_x = 4.0f32;
-    let pad_y = 4.8f32;
+    let pad_y = 4.2f32;
 
     let headers = [
         "Holder (ticker)",
@@ -462,13 +464,16 @@ fn main() {
     // ---- Footnotes ----
     let fw = PAGE_W - 2.0 * MARGIN_X;
     let fs = 7.2f32;
-    let mut f = table_bottom + 12.0;
-    f = pdf.paragraph(MARGIN_X, f, "\"Value at est. IPO\" = current SEC mark × an illustrative 1.2x–1.6x (a $1.5–2T IPO over the ~$1.25T combined SpaceX+xAI mark; the reported IPO price of $135.00/share, ~$1.77T (3 Jun 2026), is ~1.42x — inside the range). A sensitivity, not audited and not a forecast — actual proceeds depend on lock-ups, dilution and share class. DXYZ & BCAT show \"— listed\": both trade on the NYSE, so they are already market-priced (often at a premium/discount to NAV) and a mark-to-IPO multiple doesn't apply.", fs, costgw_c.clone(), fw) + 2.0;
-    f = pdf.paragraph(MARGIN_X, f, "By dollars, Baron Partners Fund is the largest holder (~$3.9B, ~37% of the fund); by share of NAV the purest listed proxy is Destiny Tech100 (NYSE: DXYZ, ~53% SpaceX). Marks already embed xAI: SpaceX absorbed it on 2 Feb 2026 and the 3/31/2026 filings carry SpaceX common at ~$526.6/share (the merger-implied price), so part of each value is xAI, not pure SpaceX.", fs, site_c.clone(), fw) + 2.0;
-    f = pdf.paragraph(MARGIN_X, f, "Diversified fund families hold small SpaceX positions too (<~1% of NAV each; immaterial per fund), confirmed via EDGAR full-text search: Fidelity (Contrafund, Blue Chip Growth, …), Neuberger Berman, Franklin Strategic Series.", fs, gray.clone(), fw) + 2.0;
+    let mut f = table_bottom + 10.0;
+    f = pdf.paragraph(MARGIN_X, f, "\"Value at est. IPO\" = current SEC mark × an illustrative 1.2x–1.6x (a $1.5–2T IPO over the ~$1.25T combined SpaceX+xAI mark; the reported IPO price of $135.00/share, ~$1.77T (3 Jun 2026), is ~1.42x — inside the range). A sensitivity, not audited and not a forecast — actual proceeds depend on lock-ups, dilution and share class. DXYZ & BCAT show \"— listed\": both trade on the NYSE, so they are already market-priced (often at a premium/discount to NAV) and a mark-to-IPO multiple doesn't apply.", fs, costgw_c.clone(), fw) + 1.2;
+    f = pdf.paragraph(MARGIN_X, f, "By dollars, Baron Partners Fund is the largest holder (~$3.9B, ~37% of the fund); by share of NAV the purest listed proxy is Destiny Tech100 (NYSE: DXYZ, ~53% SpaceX). Marks already embed xAI: SpaceX absorbed it on 2 Feb 2026 and the 3/31/2026 filings carry SpaceX common at ~$526.6/share (the merger-implied price), so part of each value is xAI, not pure SpaceX.", fs, site_c.clone(), fw) + 1.2;
+    f = pdf.paragraph(MARGIN_X, f, "No S&P 500 fast-track: on 4 Jun 2026 S&P Dow Jones Indices kept its S&P 500 / 400 / 600 rules unchanged — SpaceX still needs the 12-month IPO seasoning, positive GAAP net income (latest quarter + trailing four) and IWF ≥ 0.10 (~10% float), so the earliest possible S&P 500 inclusion is ~June 2027. (It did add a mega-cap fast-track to its broad Total Market / DJ U.S. TSM indices, eff. 8 Jun 2026.) Near-term, the funds above stay the main way to hold it.", fs, note_c.clone(), fw);
+    pdf.line(MARGIN_X, by(f), "S&P DJI — MegaCap consultation results, 4 Jun 2026 \u{2197}", false, fs, link_c.clone(), Some(SP_DJI));
+    f += fs + 2.6;
+    f = pdf.paragraph(MARGIN_X, f, "Diversified fund families hold small SpaceX positions too (<~1% of NAV each; immaterial per fund), confirmed via EDGAR full-text search: Fidelity (Contrafund, Blue Chip Growth, …), Neuberger Berman, Franklin Strategic Series.", fs, gray.clone(), fw) + 1.2;
     f = pdf.paragraph(MARGIN_X, f, "Alphabet (GOOGL): its $900M SpaceX investment (Jan 2015) is named only in 2015-era filings; today it is folded anonymously into \"non-marketable equity securities\" at cost — no sized exposure. SpaceX's own EDGAR file (CIK 1181412) holds only Form D notices.", fs, note_c.clone(), fw);
     pdf.line(MARGIN_X, by(f), "Alphabet Q3-2015 10-Q (the $900M SpaceX investment) \u{2197}", false, fs, link_c.clone(), Some(GOOG_2015));
-    f += fs + 3.6;
+    f += fs + 2.6;
     pdf.paragraph(MARGIN_X, f, "Method: holdings found via SEC EDGAR full-text search (efts.sec.gov) for \"Space Exploration Technologies\", each filing verified; the USD figure sums every SpaceX line (common classes + preferred series + SPVs). As-of dates differ (DXYZ 3/31/2025; BCAT 12/31/2024; rest 12/2025–3/2026) and change quarterly. Not investment advice.", fs, gray.clone(), fw);
 
     let page1 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
