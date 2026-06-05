@@ -25,10 +25,10 @@ cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, the
 # X/Twitter (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
 cargo run --release --bin datacenter_chart -- --post-sec       # render PDF page 2 -> png/sec_financials.png, post to both
-cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 4 PDF pages -> png/pdf_page-{1,2,3,4}.png, post as ONE multi-image post to LinkedIn + X
+cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 5 PDF pages -> png/pdf_page-{1,2,3,4,5}.png, post as ONE multi-image post to LinkedIn (all 5) + X (first 4)
 cargo run --release --bin datacenter_chart -- --post-pdf-li    # same, LinkedIn only
 cargo run --release --bin datacenter_chart -- --post-pdf-x     # same, X only (multi-image)
-cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 4 pages to X as a reply-chain thread
+cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 5 pages to X as a reply-chain thread
 cargo run --release --bin datacenter_chart -- --post-pdf-doc   # post pdf/datacenter_sources.pdf to LinkedIn as a NATIVE document (Documents API)
 cargo run --release --bin datacenter_chart -- --post-spacex-doc # post pdf/spacex_exposure.pdf to LinkedIn as a NATIVE document (German caption)
 cargo run --release --bin datacenter_chart -- --post-png <path> <caption>  # post one PNG as a plain standalone tweet
@@ -37,8 +37,9 @@ cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 
 `--post-pdf` posts to LinkedIn (`multiImage`) and best-effort to X; it still
 succeeds if LinkedIn posts even when X fails. `--post-pdf-li`/`--post-pdf-x`
-restrict to one network; `--post-pdf-thread` posts the 4 pages to X as a
-reply-chain (one single-image tweet per page).
+restrict to one network; `--post-pdf-thread` posts the 5 pages to X as a
+reply-chain (one single-image tweet per page). `--post-pdf` sends all 5 pages
+to LinkedIn but only the first 4 to X (X caps multi-image posts at 4).
 
 **X pay-per-use posting (mid-2026)** — `POST /2/media/upload` always succeeds,
 but `POST /2/tweets` (the *tweet create* call) `403`s ("not permitted") in two
@@ -69,7 +70,7 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   `ab_glyph` crates. Hand-rolled table layout: a `rows: Vec<[Cell; NCOL]>`
   drives fixed-width columns; `wrap_text` reflows cell text; row heights derive
   from the tallest wrapped cell; glyphs are rasterized with alpha blending.
-- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the **4-page** PDF
+- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the **5-page** PDF
   with `printpdf` 0.9 (an `Op`-based document model). Filled header/row
   rectangles (`Op::DrawPolygon` with `PaintMode::Fill` — note
   `Op::DrawRectangle` does **not** fill in 0.9), grid lines, and per-row source
@@ -84,8 +85,13 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   source links read "20-F ↗" — the `Sec` struct carries a `form` field for the
   SEC table, and the PP&E-composition label switches on `co.starts_with("Nebius")`.
   Page 4: **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates*
-  — press/analyst, not SEC. The composition and private tables are drawn by the
-  reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
+  — press/analyst, not SEC. Page 5: **off-grid vs on-grid per SEC filing** — an
+  `og: [(operator, classification, color, evidence, url, form); 8]` table
+  showing that **0 of 7 SEC filers disclose** campus-level grid-vs-self-gen;
+  CoreWeave/Nebius only imply on-grid; the off-grid gas build-out (xAI turbines,
+  Meta's Williams plant, Crusoe/Stargate) is **absent from all 10-Ks** and
+  press/satellite-sourced (Cleanview). The composition, private and off-grid
+  tables are drawn by the reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
   cell is `(text, bold, color, Option<url>)`). **All subtitles and footnotes use
   the word-wrapping `Pdf::paragraph` (which returns the running `y`, so blocks
   flow down the page); plain `Pdf::line` does NOT wrap and overflows the right
@@ -139,8 +145,9 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   `chart_caption()` is the default (links directly to the PDF on GitHub; X has no
   PDF attachment). `--post-sec` (in `main.rs`) shells out to `pdftoppm` to
   rasterize PDF page 2 → `png/sec_financials.png` and posts it to both networks
-  with an SEC caption. `--post-pdf` (in `main.rs`) rasterizes all 4 PDF pages →
-  `png/pdf_page-{1,2,3,4}.png` and posts them as ONE multi-image post via
+  with an SEC caption. `--post-pdf` (in `main.rs`) rasterizes all 5 PDF pages →
+  `png/pdf_page-{1,2,3,4,5}.png` and posts them as ONE multi-image post (all 5
+  to LinkedIn, first 4 to X — X caps at 4) via
   `twitter::publish_images(paths, caption)` (shared `upload_media` +
   `create_tweet` helpers; up to 4 images) and `linkedin::publish_images`.
   `create_tweet` takes an optional `reply_to` tweet id and returns the new

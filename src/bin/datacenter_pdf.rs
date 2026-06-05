@@ -309,6 +309,8 @@ const ORCL: &str = "https://www.sec.gov/Archives/edgar/data/1341439/000095017025
 // Nebius is a foreign private issuer — files Form 20-F (US GAAP), not 10-K.
 const NBIS: &str = "https://www.sec.gov/Archives/edgar/data/1513845/000110465926052948/nbis-20251231x20f.htm";
 const CRWV: &str = "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000104/crwv-20251231.htm";
+// Behind-the-meter / off-grid build-out: press/analyst, not in any SEC filing.
+const CLEANVIEW: &str = "https://cleanview.co/reports/behind-the-meter-data-centers";
 const XAI: &str = "https://x.ai/news/anthropic-compute-partnership";
 const OPENAI: &str = "https://openai.com/index/five-new-stargate-sites/";
 const ANTHROPIC: &str = "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure";
@@ -829,8 +831,72 @@ fn main() {
 
     let page4 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
+    // ===================== PAGE 5: off-grid vs on-grid per SEC filings =====================
+    let on_grid_c = capex_c.clone();   // green — grid supply stated/implied
+    let not_stated_c = costgw_c.clone(); // amber — not disclosed
+    let none_c = rgb(153, 27, 27);     // red — no SEC filing
+
+    let mut t5 = 24.0f32;
+    pdf.line(MARGIN_X, by(t5), "Off-grid vs on-grid — what the SEC filings actually disclose", true, 15.0, title_c.clone(), None);
+    t5 += 15.0;
+    t5 = pdf.paragraph(MARGIN_X, t5, "Power sourcing is not a required financial-statement disclosure, so it is largely invisible to SEC filings. Of the 7 SEC filers below, ZERO state whether any data center is on-grid or off-grid / self-powered; 2 (CoreWeave, Nebius) only imply grid supply; the 4 hyperscalers disclose just energy procurement (PPAs / renewables) plus risk factors; the 3 private operators file nothing at all.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
+
+    let og_head = [
+        "Operator (filing)",
+        "Power source per SEC filing",
+        "What the filing actually says about power",
+        "Source",
+    ];
+    let og_w = [112.0f32, 138.0, 416.0, 120.0]; // 786
+    // (operator, classification, class-color, evidence, url, form-label)
+    let og: [(&str, &str, Color, &str, &str, &str); 8] = [
+        ("Amazon (AWS)", "Not stated", not_stated_c.clone(),
+         "20-year electricity-supply contracts (PPA-style) and an \"energy shortages\" risk factor — but no campus-level grid-vs-self-generation detail.", AMZN, "10-K \u{2197}"),
+        ("Microsoft (Azure)", "Not stated", not_stated_c.clone(),
+         "Lists \"predictable energy\" as a data-center dependency and a carbon-negative goal; no power source or on-site generation stated.", MSFT, "10-K \u{2197}"),
+        ("Alphabet (Google)", "Not stated (grid-implied)", not_stated_c.clone(),
+         "Multi-year PPAs with third-party suppliers ($9.9B 2027\u{2013}47), renewable-energy VIEs, a $4.8B energy-infra acquisition (Intersect) — all imply third-party/grid supply, never stated at the DC level.", GOOG, "10-K \u{2197}"),
+        ("Meta", "Not stated", not_stated_c.clone(),
+         "Only long-term renewable-energy purchase agreements (3\u{2013}25 yr). Its press-reported $1.6B / 400 MW Williams behind-the-meter gas plant (New Albany, OH) is entirely absent from the 10-K.", META, "10-K \u{2197}"),
+        ("Oracle (OCI)", "Not stated", not_stated_c.clone(),
+         "Only generic energy-cost and emissions / \"energy mix\" risk language. No PPAs, no renewables, no power source disclosed.", ORCL, "10-K \u{2197}"),
+        ("CoreWeave (CRWV)", "On-grid (stated)", on_grid_c.clone(),
+         "\"Purchased electricity for our data centers\"; engages utilities on \"grid integration\"; landlord/utility restores power; uses PPAs to secure & hedge power. On-site generation = diesel backup only. 850 MW active / 3.1 GW contracted.", CRWV, "10-K \u{2197}"),
+        ("Nebius (NBIS)", "On-grid (implied)", on_grid_c.clone(),
+         "Electricity is a data-center utility cost; owned / greenfield sites. No PPAs, no renewables, no self-generation. 170 MW active / >2 GW contracted. \"On-site generation\" appears only as a hypothetical future regulation.", NBIS, "20-F \u{2197}"),
+        ("xAI · OpenAI · Anthropic", "No SEC filing", none_c.clone(),
+         "Private — they file no SEC reports at all, so their well-documented off-grid gas plants (xAI ~35 on-site turbines; Crusoe-built gas at Stargate) are nowhere in SEC data.", "", "\u{2014}"),
+    ];
+    let og_rows: Vec<Vec<(String, bool, Color, Option<String>)>> = og
+        .iter()
+        .map(|(op, cls, clsc, ev, url, label)| {
+            vec![
+                (op.to_string(), true, company_c.clone(), None),
+                (cls.to_string(), true, clsc.clone(), None),
+                (ev.to_string(), false, ink.clone(), None),
+                (
+                    label.to_string(),
+                    false,
+                    if url.is_empty() { gray.clone() } else { link_c.clone() },
+                    if url.is_empty() { None } else { Some(url.to_string()) },
+                ),
+            ]
+        })
+        .collect();
+    let og_bottom = pdf.draw_table(s_x, t5 + 6.0, &og_w, &og_head, &og_rows, &pal, cell, head, lh, pad_x, pad_y);
+
+    let ofw = PAGE_W - 2.0 * MARGIN_X;
+    let mut of = og_bottom + 14.0;
+    of = pdf.paragraph(MARGIN_X, of, "The percentages: 0 of 7 SEC filers (0%) disclose a campus-level on-grid vs off-grid split or primary self-generation; the only self-generation in any filing is CoreWeave's diesel backup. 2 of 7 (~29%) merely imply grid supply via \"purchased electricity\" / utility-cost language. The 3 private operators (xAI, OpenAI, Anthropic) file nothing.", 7.6, not_stated_c.clone(), ofw) + 3.0;
+    of = pdf.paragraph(MARGIN_X, of, "Not found in any SEC filing — the entire off-grid build-out. Cleanview counts ~56 GW of planned behind-the-meter (self-powered) capacity (~30% of the US data-center pipeline; ~2 GW online today, almost all gas-fired). xAI's on-site gas turbines (Memphis), Meta's $1.6B / 400 MW Williams plant (New Albany, OH) and the Crusoe-built on-site gas at OpenAI/Oracle's Stargate (Abilene) live in press, construction permits and satellite imagery — not in 10-Ks.", 7.6, gray.clone(), ofw);
+    pdf.line(MARGIN_X, by(of), "Cleanview — \"Bypassing the Grid\" (behind-the-meter data centers, 2026) \u{2197}", false, 7.6, link_c.clone(), Some(CLEANVIEW));
+    of += 7.6 + 4.0;
+    pdf.paragraph(MARGIN_X, of, "Each \"power source per SEC filing\" verdict was verified against the FY2025 10-K / 20-F (read June 2026). GW/MW capacities are press/analyst-sourced except CoreWeave's & Nebius's, which they disclose; SEC filings do not disclose data-center capacity in GW.", 7.6, gray.clone(), ofw);
+
+    let page5 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+
     // ---- Save ----
-    doc.with_pages(vec![page1, page2, page3, page4]);
+    doc.with_pages(vec![page1, page2, page3, page4, page5]);
     let mut sw: Vec<printpdf::PdfWarnMsg> = Vec::new();
     let bytes = doc.save(&PdfSaveOptions::default(), &mut sw);
     std::fs::write("pdf/datacenter_sources.pdf", &bytes).expect("write pdf");

@@ -10,7 +10,7 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 
 - [`png/datacenter_capacity.png`](png/datacenter_capacity.png) — the chart as a
   styled table (title, header band, alternating rows, wrapped cells).
-- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **4 pages**, A4
+- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **5 pages**, A4
   landscape: (1) the same table, where each row's **Capex** cell carries a
   clickable source link (public → FY2025 **10-K on sec.gov**, or **20-F** for
   Nebius; private → primary announcement); (2) a **SEC financials** page (capex
@@ -20,7 +20,12 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   its filing;
   (4) a **private operators** page with press/analyst estimates of the
   GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
-  (clearly separated from the SEC pages, as none of the three file with the SEC).
+  (clearly separated from the SEC pages, as none of the three file with the SEC);
+  (5) an **off-grid vs on-grid** page showing what each SEC filing actually
+  discloses about how the data centers are powered — the finding being that
+  **0 of 7 filers** state grid vs. self-generation at the campus level, and the
+  ~56 GW behind-the-meter (mostly gas) build-out is **invisible to SEC filings**
+  (press/satellite-sourced, e.g. Cleanview).
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
 - [`pdf/spacex_exposure.pdf`](pdf/spacex_exposure.pdf) — a separate one-page A4
@@ -125,11 +130,12 @@ to **both** LinkedIn and X with an SEC-specific caption:
 cargo run --release --bin datacenter_chart -- --post-sec   # needs pdftoppm + the PDF
 ```
 
-### Post all four PDF pages
+### Post all five PDF pages
 
-`--post-pdf` rasterizes **all four** PDF pages (`pdftoppm -r 200` →
-`png/pdf_page-{1,2,3,4}.png`) and publishes them as a **single multi-image post**
-to **LinkedIn** (`multiImage`) and, best-effort, to **X** (up to 4 images). The
+`--post-pdf` rasterizes **all five** PDF pages (`pdftoppm -r 200` →
+`png/pdf_page-{1,2,3,4,5}.png`) and publishes them as a **single multi-image post**
+to **LinkedIn** (`multiImage`, all 5) and, best-effort, to **X** (first 4 — X caps
+multi-image posts at 4 images). The
 caption always links to the full clickable PDF on GitHub. Network-restricted
 variants:
 
