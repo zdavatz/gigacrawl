@@ -271,6 +271,9 @@ struct Holder {
     vehicle: &'static str,
     /// Total fair value of SpaceX (all security lines summed), USD, per filing.
     usd: &'static str,
+    /// Illustrative value at a $1.5–2T IPO (current mark × 1.2–1.6); "—" for
+    /// the NYSE-listed funds, which are already market-priced.
+    ipo: &'static str,
     /// SpaceX share of the fund + holding detail, as last disclosed.
     stake: &'static str,
     /// Source-link label (form + period).
@@ -313,6 +316,7 @@ fn main() {
     let ink = rgb(30, 41, 59);
     let company_c = rgb(12, 74, 110);
     let stake_c = rgb(21, 101, 52);
+    let costgw_c = rgb(146, 64, 14); // amber — illustrative IPO value
     let note_c = rgb(71, 85, 105);
     let link_c = rgb(13, 71, 161);
     let gray = rgb(100, 116, 139);
@@ -332,9 +336,9 @@ fn main() {
 
     // ---- Title ----
     let mut top = 24.0f32;
-    pdf.line(MARGIN_X, by(top), "How to Own SpaceX Before the IPO — Public Funds That Already Hold It (per SEC filings)", true, 15.0, title_c.clone(), None);
+    pdf.line(MARGIN_X, by(top), "Who Owns SpaceX Going Into Its IPO — and What the Stake Is Worth (per SEC filings)", true, 15.0, title_c.clone(), None);
     top += 15.0;
-    top = pdf.paragraph(MARGIN_X, top, "SpaceX is private and files only Form D. Listed closed-end funds, interval funds and mutual funds disclose their SpaceX stakes in Form N-PORT / N-CSR — each row links to the actual filing. The USD column is the total fair value of all SpaceX lines in that filing; Destiny Tech100 (DXYZ), the purest listed proxy, is shown first, then holders by SpaceX dollars.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X);
+    top = pdf.paragraph(MARGIN_X, top, "SpaceX reportedly priced a record IPO on 3 Jun 2026 (~$1.77T; ~555.6M Class A shares at $135; Nasdaq listing ~12 Jun), after absorbing xAI in an all-stock merger on 2 Feb 2026 (~$1.25T combined). It had been private (Form D only); these listed, interval and mutual funds disclosed SpaceX in Form N-PORT / N-CSR — each row links to the filing. \"SpaceX now (USD)\" is the total fair value of all SpaceX lines in that filing. \"Value at est. IPO\" scales that mark by an illustrative $1.5-2T range (~1.2x-1.6x the ~$1.25T mark) — a press-estimate sensitivity, NOT audited.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X);
     top += 2.0;
 
     // Geometry shared with the data-center PDF.
@@ -346,12 +350,13 @@ fn main() {
 
     let headers = [
         "Holder (ticker)",
-        "Vehicle — how a public investor gets exposure",
-        "SpaceX exposure (USD)",
-        "Share of the fund & holding detail (as last disclosed)",
+        "Vehicle — how to get exposure",
+        "SpaceX now (USD)",
+        "Value at est. IPO ($1.5–2T)",
+        "Share of fund & holding detail",
         "SEC filing (linked)",
     ];
-    let col_w = [148.0f32, 188.0, 66.0, 206.0, 178.0]; // 786
+    let col_w = [142.0f32, 152.0, 60.0, 92.0, 200.0, 140.0]; // 786
     let table_x = (PAGE_W - col_w.iter().sum::<f32>()) / 2.0;
 
     let holders = [
@@ -359,6 +364,7 @@ fn main() {
             name: "Destiny Tech100  (NYSE: DXYZ)",
             vehicle: "Listed closed-end fund — trades like a stock; a basket of top private companies, SpaceX is its anchor.",
             usd: "$36.3M",
+            ipo: "— listed",
             stake: "~53% of NAV via three SpaceX SPVs (DXYZ SpaceX I 38.7% + MWAM VC SpaceX-II 11.5% + Celadon 2.6%) — its dominant position.",
             form: "NPORT-P · 3/31/2025 \u{2197}",
             url: DXYZ,
@@ -367,6 +373,7 @@ fn main() {
             name: "Baron Partners Fund  (BPTRX)",
             vehicle: "Mutual fund (Baron Select Funds) — buy directly or via most brokerages.",
             usd: "$3,890M",
+            ipo: "$4.7\u{2013}6.2B",
             stake: "~37% of net assets — the fund's largest holding; SpaceX common (Cl A/C, $1.33B) + preferred (Cl H/I, Series N, $2.56B).",
             form: "NPORT-EX · 3/31/2026 \u{2197}",
             url: BARON_SELECT,
@@ -375,6 +382,7 @@ fn main() {
             name: "Baron Focused Growth  (BFGFX)",
             vehicle: "Mutual fund (Baron Select Funds) — same filing as Baron Partners.",
             usd: "$821M",
+            ipo: "$1.0\u{2013}1.3B",
             stake: "~21% of net assets; SpaceX common (Cl A/C, $544M) + preferred (Series K/N, $278M). A top holding alongside Tesla.",
             form: "NPORT-EX · 3/31/2026 \u{2197}",
             url: BARON_SELECT,
@@ -383,6 +391,7 @@ fn main() {
             name: "StepStone Private Venture & Growth Fund",
             vehicle: "Interval fund (StepStone) — private-markets access for qualified investors.",
             usd: "$587M",
+            ipo: "$704\u{2013}939M",
             stake: "~9.1% of net assets across three SpaceX lines ($117.0M + $307.1M + $162.4M).",
             form: "NPORT-P · 3/31/2026 \u{2197}",
             url: STEPSTONE,
@@ -391,6 +400,7 @@ fn main() {
             name: "Baron Asset Fund  (BARAX)",
             vehicle: "Mutual fund (Baron Investment Funds Trust) — separate trust from Baron Select.",
             usd: "$474M",
+            ipo: "$569\u{2013}758M",
             stake: "SpaceX held as common (Cl A/C) + a Series N preferred line ($405M); a sizeable but not top holding. (Baron Growth Fund holds none.)",
             form: "NPORT-EX · 12/31/2025 \u{2197}",
             url: BARON_TRUST,
@@ -399,6 +409,7 @@ fn main() {
             name: "The Private Shares Fund  (PIIVX)",
             vehicle: "Interval fund (Liberty Street) — late-stage private companies; available at brokerages.",
             usd: "$190M",
+            ipo: "$228\u{2013}304M",
             stake: "Single SpaceX line — 360,330 sh; cost $7.4M, now ~$190M fair value (marked up ~26×). A long-held position.",
             form: "NPORT-EX · 3/31/2026 \u{2197}",
             url: PIIVX,
@@ -407,6 +418,7 @@ fn main() {
             name: "Coatue Innovative Strategies Fund",
             vehicle: "Interval fund (Coatue) — tech-focused private/public crossover.",
             usd: "$137M",
+            ipo: "$164\u{2013}219M",
             stake: "~2.8% of net assets — SpaceX Class A ($85.1M) + Class C ($51.8M) lines.",
             form: "NPORT-EX · 3/31/2026 \u{2197}",
             url: COATUE,
@@ -415,6 +427,7 @@ fn main() {
             name: "ARK Venture Fund  (ARKVX)",
             vehicle: "Continuously-offered interval fund (ARK) — low minimum, sold through brokerages/Titan.",
             usd: "$61M",
+            ipo: "$73\u{2013}98M",
             stake: "A top position — held directly: common ($34.6M) + Series D preferred ($15.9M) + a SpaceX SPV ($10.0M).",
             form: "N-CSRS · 1/31/2026 \u{2197}",
             url: ARKVX,
@@ -423,6 +436,7 @@ fn main() {
             name: "BlackRock Capital Allocation Term Trust  (NYSE: BCAT)",
             vehicle: "Listed closed-end fund — trades like a stock; diversified multi-asset, small private sleeve.",
             usd: "$7M",
+            ipo: "— listed",
             stake: "A small SpaceX position (~$7.3M) among hundreds of holdings — minor relative to NAV.",
             form: "NPORT-P · 12/31/2024 \u{2197}",
             url: BCAT,
@@ -436,6 +450,7 @@ fn main() {
                 (h.name.to_string(), true, company_c.clone(), None),
                 (h.vehicle.to_string(), false, ink.clone(), None),
                 (h.usd.to_string(), true, stake_c.clone(), None),
+                (h.ipo.to_string(), true, costgw_c.clone(), None),
                 (h.stake.to_string(), false, ink.clone(), None),
                 (h.form.to_string(), false, link_c.clone(), Some(h.url.to_string())),
             ]
@@ -446,13 +461,15 @@ fn main() {
 
     // ---- Footnotes ----
     let fw = PAGE_W - 2.0 * MARGIN_X;
-    let mut f = table_bottom + 16.0;
-    f = pdf.paragraph(MARGIN_X, f, "Two ways to read it: by dollars, Baron Partners Fund is by far the largest holder (~$3.9B of SpaceX, ~37% of the fund); by share of NAV, the purest listed proxy is Destiny Tech100 (NYSE: DXYZ) — ~53% SpaceX, so it trades partly as a SpaceX tracker (often at a large premium/discount to NAV). BCAT is the other NYSE-listed vehicle, but its SpaceX weight is tiny.", 7.6, site_c.clone(), fw) + 3.0;
-    f = pdf.paragraph(MARGIN_X, f, "Diversified fund families also hold small SpaceX positions (well under ~1% of NAV each), confirmed in EDGAR full-text search but immaterial per fund: Fidelity (Contrafund, Blue Chip Growth and others), Neuberger Berman, and Franklin Strategic Series. They are not a meaningful way to bet on a SpaceX IPO.", 7.6, gray.clone(), fw) + 3.0;
-    f = pdf.paragraph(MARGIN_X, f, "Operating-company caveat — Alphabet (GOOGL): its $900M SpaceX investment (January 2015) is named only in 2015-era filings; current 10-Ks fold it anonymously into \"non-marketable equity securities\" at cost, so Alphabet gives no transparent, sized SpaceX exposure today. SpaceX's own EDGAR file (CIK 1181412) contains only Form D notices.", 7.6, note_c.clone(), fw);
-    pdf.line(MARGIN_X, by(f), "Alphabet Q3-2015 10-Q (the $900M SpaceX investment) \u{2197}", false, 7.6, link_c.clone(), Some(GOOG_2015));
-    f += 7.6 + 5.4;
-    pdf.paragraph(MARGIN_X, f, "Method: holdings located via SEC EDGAR full-text search (efts.sec.gov) for the exact phrase \"Space Exploration Technologies\", then each filing verified. The USD figure sums every SpaceX line in that filing (common share classes + preferred series + SPVs). As-of dates differ (DXYZ 3/31/2025; BCAT 12/31/2024; the rest 12/2025–3/2026) and change every quarter; funds mark SpaceX to estimated fair value, not a market price. Not investment advice.", 7.6, gray.clone(), fw);
+    let fs = 7.2f32;
+    let mut f = table_bottom + 12.0;
+    f = pdf.paragraph(MARGIN_X, f, "\"Value at est. IPO\" = current SEC mark × an illustrative 1.2x–1.6x (a $1.5–2T IPO over the ~$1.25T combined SpaceX+xAI mark; the reported $1.77T pricing is ~1.42x, inside the range). A sensitivity, not audited and not a forecast — actual proceeds depend on lock-ups, dilution and share class. DXYZ & BCAT show \"— listed\": both trade on the NYSE, so they are already market-priced (often at a premium/discount to NAV) and a mark-to-IPO multiple doesn't apply.", fs, costgw_c.clone(), fw) + 2.0;
+    f = pdf.paragraph(MARGIN_X, f, "By dollars, Baron Partners Fund is the largest holder (~$3.9B, ~37% of the fund); by share of NAV the purest listed proxy is Destiny Tech100 (NYSE: DXYZ, ~53% SpaceX). Marks already embed xAI: SpaceX absorbed it on 2 Feb 2026 and the 3/31/2026 filings carry SpaceX common at ~$526.6/share (the merger-implied price), so part of each value is xAI, not pure SpaceX.", fs, site_c.clone(), fw) + 2.0;
+    f = pdf.paragraph(MARGIN_X, f, "Diversified fund families hold small SpaceX positions too (<~1% of NAV each; immaterial per fund), confirmed via EDGAR full-text search: Fidelity (Contrafund, Blue Chip Growth, …), Neuberger Berman, Franklin Strategic Series.", fs, gray.clone(), fw) + 2.0;
+    f = pdf.paragraph(MARGIN_X, f, "Alphabet (GOOGL): its $900M SpaceX investment (Jan 2015) is named only in 2015-era filings; today it is folded anonymously into \"non-marketable equity securities\" at cost — no sized exposure. SpaceX's own EDGAR file (CIK 1181412) holds only Form D notices.", fs, note_c.clone(), fw);
+    pdf.line(MARGIN_X, by(f), "Alphabet Q3-2015 10-Q (the $900M SpaceX investment) \u{2197}", false, fs, link_c.clone(), Some(GOOG_2015));
+    f += fs + 3.6;
+    pdf.paragraph(MARGIN_X, f, "Method: holdings found via SEC EDGAR full-text search (efts.sec.gov) for \"Space Exploration Technologies\", each filing verified; the USD figure sums every SpaceX line (common classes + preferred series + SPVs). As-of dates differ (DXYZ 3/31/2025; BCAT 12/31/2024; rest 12/2025–3/2026) and change quarterly. Not investment advice.", fs, gray.clone(), fw);
 
     let page1 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
