@@ -140,6 +140,40 @@ fn main() {
         return;
     }
 
+    // `--post-spacex-doc`: post pdf/spacex_exposure.pdf to LinkedIn as a NATIVE
+    // document (Documents API), identical mechanism to --post-pdf-doc but with
+    // the SpaceX-exposure caption. LinkedIn only.
+    if args.iter().any(|a| a == "--post-spacex-doc") {
+        let pdf_path = std::path::Path::new("pdf/spacex_exposure.pdf");
+        if !pdf_path.exists() {
+            eprintln!("pdf/spacex_exposure.pdf not found — run `spacex_exposure` first");
+            std::process::exit(1);
+        }
+        let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/spacex_exposure.pdf";
+        let caption = format!(
+            "Wie kommt man an SpaceX, bevor es an die Börse geht? 🚀\n\n\
+            SpaceX ist privat und reicht bei der SEC nur Form D ein — aber eine Reihe börsengehandelter und offener Fonds hält bereits SpaceX-Anteile und legt sie in ihren SEC-Filings (Form N-PORT / N-CSR) offen. Damit gibt es heute schon „Pre-IPO\"-Exposure.\n\n\
+            Wir haben die Filings durchsucht (EDGAR-Volltextsuche nach „Space Exploration Technologies\") und jede Position verifiziert. Sortiert nach SpaceX-Anteil am Fonds:\n\n\
+            • Destiny Tech100 (NYSE: DXYZ) — ~37 % des NAV, der reinste börsennotierte SpaceX-Proxy\n\
+            • Baron Partners (BPTRX) & Baron Focused Growth (BFGFX) — SpaceX ist die grösste Position (~13–14 %)\n\
+            • ARK Venture (ARKVX), StepStone, The Private Shares Fund (PIIVX), Coatue\n\
+            • BlackRock Capital Allocation Trust (NYSE: BCAT) — börsennotiert, aber nur winzige Gewichtung\n\n\
+            Jede Zeile verlinkt direkt auf das zugrunde liegende SEC-Filing. Plus eine ehrliche Fussnote zu Alphabets 900-Mio.-Investment von 2015 (heute nicht mehr transparent ausgewiesen).\n\n\
+            📄 Volles klickbares PDF (alle Quellen verlinkt): {pdf_url}\n\n\
+            Keine Anlageberatung, nur persönliche Analyse.\n\
+            #SpaceX #PreIPO #SEC #Investing #PrivateMarkets"
+        );
+        let title = "SpaceX vor dem IPO — börsennotierte Fonds, die es halten (laut SEC)";
+        match linkedin::publish_document(pdf_path, &caption, title) {
+            Ok(u) => println!("Posted SpaceX PDF document to LinkedIn: {u}"),
+            Err(e) => {
+                eprintln!("[linkedin] document post failed: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
     // `--post-indc-doc`: post pdf/indc_overview.pdf to LinkedIn as a NATIVE
     // document (Documents API), identical mechanism to --post-pdf-doc but with
     // the IndC caption. LinkedIn only.
