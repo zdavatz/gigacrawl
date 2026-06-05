@@ -584,9 +584,10 @@ fn main() {
     }
 
     // ---- Footer ----
-    let foot = table_top + table_h + 14.0;
-    pdf.line(MARGIN_X, by(foot), "Capex = purchases of property & equipment (latest annual 10-K, or 20-F for Nebius). Click a source link in the Capex column to open the filing. GW figures are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(foot + 11.0), "Est. $/GW = flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.", false, 7.2, gray.clone(), None);
+    let fw1 = PAGE_W - 2.0 * MARGIN_X;
+    let mut foot = table_top + table_h + 14.0;
+    foot = pdf.paragraph(MARGIN_X, foot, "Capex = purchases of property & equipment (latest annual 10-K, or 20-F for Nebius). Click a source link in the Capex column to open the filing. GW figures are press/analyst-sourced — SEC filings do not disclose capacity in gigawatts.", 7.2, gray.clone(), fw1) + 2.0;
+    pdf.paragraph(MARGIN_X, foot, "Est. $/GW = flagship-project cost ÷ that project's power. \"facility\" excludes IT (industry ~$8–12B/GW); \"all-in\" includes GPUs/servers (~$35–60B/GW; Nvidia cites $50–60B). \"n/d\" = no per-project cost disclosed. Press/analyst-derived, not an SEC figure.", 7.2, gray.clone(), fw1);
 
     // Page 1 done — capture its ops.
     let page1 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
@@ -631,8 +632,7 @@ fn main() {
     let mut t2 = 24.0f32;
     pdf.line(MARGIN_X, by(t2), "FY2025 SEC Financials — AI Data-Center Capex & Commitments", true, 15.0, title_c.clone(), None);
     t2 += 15.0;
-    pdf.line(MARGIN_X, by(t2), "Audited figures from each company's latest annual report on SEC EDGAR (Form 10-K, or 20-F for Nebius), sorted by FY2025 capex. Private operators (xAI, OpenAI, Anthropic) file no SEC reports and are omitted.", false, 9.0, gray.clone(), None);
-    t2 += 14.0;
+    t2 = pdf.paragraph(MARGIN_X, t2, "Audited figures from each company's latest annual report on SEC EDGAR (Form 10-K, or 20-F for Nebius), sorted by FY2025 capex. Private operators (xAI, OpenAI, Anthropic) file no SEC reports and are omitted.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
 
     let s_top = t2 + 6.0;
     let s_head_wrap: Vec<Vec<String>> = s_head.iter().enumerate()
@@ -702,15 +702,19 @@ fn main() {
         let last = i == s_heights.len() - 1;
         pdf.seg(s_x, by(ry), s_x + s_table_w, by(ry), if last { 0.8 } else { 0.5 }, if last { outer.clone() } else { border.clone() });
     }
-    // Footnotes
-    let f2 = s_top + s_table_h + 16.0;
-    pdf.line(MARGIN_X, by(f2), "FY = fiscal year (Microsoft's ends June 30, Oracle's May 31; Amazon, Alphabet, Meta, CoreWeave & Nebius end December 31). Nebius is a foreign private issuer — it files Form 20-F (US GAAP), not 10-K. Capex = purchases of property & equipment from the cash-flow statement.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 11.0), "PP&E (property, plant & equipment), net = book value of long-lived physical assets (land, buildings, servers, network gear) after depreciation; Alphabet & Meta include finance-lease right-of-use assets.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 22.0), "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 33.0), "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", false, 7.2, gray.clone(), None);
-    pdf.line(MARGIN_X, by(f2 + 44.0), "Read leverage, not just the ratio: a low capex÷OCF can mask heavy debt. CoreWeave (337%) carries ~$21.4B of debt and a $1.2B net loss, while Nebius (1057%) holds ~$4B debt, >$9B cash, and is profitable — the reverse of what the ratio alone suggests.", true, 7.4, site_c.clone(), None);
+    // Footnotes (word-wrapped)
+    let fw = PAGE_W - 2.0 * MARGIN_X;
+    let mut f2 = s_top + s_table_h + 16.0;
+    f2 = pdf.paragraph(MARGIN_X, f2, "FY = fiscal year (Microsoft's ends June 30, Oracle's May 31; Amazon, Alphabet, Meta, CoreWeave & Nebius end December 31). Nebius is a foreign private issuer — it files Form 20-F (US GAAP), not 10-K. Capex = purchases of property & equipment from the cash-flow statement.", 7.2, gray.clone(), fw) + 2.0;
+    f2 = pdf.paragraph(MARGIN_X, f2, "PP&E (property, plant & equipment), net = book value of long-lived physical assets (land, buildings, servers, network gear) after depreciation; Alphabet & Meta include finance-lease right-of-use assets.", 7.2, gray.clone(), fw) + 2.0;
+    f2 = pdf.paragraph(MARGIN_X, f2, "\"Leases not yet commenced\" = signed future lease obligations not on the balance sheet, mostly data centers (10-K notes). Each figure is in the linked 10-K.", 7.2, gray.clone(), fw) + 2.0;
+    f2 = pdf.paragraph(MARGIN_X, f2, "Capex ÷ OCF (operating cash flow) shows how much of the cash each firm generates from operations it reinvests in property & equipment.", 7.2, gray.clone(), fw) + 2.0;
+    pdf.paragraph(MARGIN_X, f2, "Read leverage, not just the ratio: a low capex÷OCF can mask heavy debt. CoreWeave (337%) carries ~$21.4B of debt and a $1.2B net loss, while Nebius (1057%) holds ~$4B debt, >$9B cash, and is profitable — the reverse of what the ratio alone suggests.", 7.2, site_c.clone(), fw);
 
-    // ----- Page 2, lower: PP&E composition — compute/servers vs. real estate -----
+    // Page 2 done (SEC financials) — capture its ops.
+    let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+
+    // ===================== PAGE 3: PP&E composition — compute/servers vs. real estate =====================
     let pal = Pal {
         header_bg: header_bg.clone(),
         header_fg: header_fg.clone(),
@@ -719,11 +723,10 @@ fn main() {
         border: border.clone(),
         outer: outer.clone(),
     };
-    let mut t3 = f2 + 33.0 + 30.0;
-    pdf.line(MARGIN_X, by(t3), "Where the capital sits — compute/servers vs. real estate (FY2025 gross PP&E, from each SEC filing)", true, 13.0, title_c.clone(), None);
-    t3 += 13.0;
-    pdf.line(MARGIN_X, by(t3), "The audited equipment-vs-plant split that page 1's $/GW estimates approximate. GPUs sit in the \"compute\" bucket; SEC filings do not isolate GPU spend.", false, 8.5, gray.clone(), None);
-    t3 += 13.0;
+    let mut t3 = 24.0f32;
+    pdf.line(MARGIN_X, by(t3), "Where the capital sits — compute/servers vs. real estate (FY2025 gross PP&E)", true, 15.0, title_c.clone(), None);
+    t3 += 15.0;
+    t3 = pdf.paragraph(MARGIN_X, t3, "The audited equipment-vs-plant split that page 1's $/GW estimates approximate, from each SEC filing. GPUs sit in the \"compute\" bucket; SEC filings do not isolate GPU spend.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
 
     let comp_head = [
         "Company",
@@ -760,7 +763,6 @@ fn main() {
         .collect();
     let comp_bottom = pdf.draw_table(s_x, t3 + 4.0, &comp_w, &comp_head, &comp_rows, &pal, cell, head, lh, pad_x, pad_y);
 
-    let fw = PAGE_W - 2.0 * MARGIN_X;
     let mut cf = comp_bottom + 14.0;
     cf = pdf.paragraph(MARGIN_X, cf, "All figures are FY2025 gross (at cost) from each filing's property & equipment note, except finance-lease right-of-use assets (net). Category labels differ by filer; the \"compute\" column is each company's own server/equipment bucket — SEC filings do not isolate GPU spend.", 7.2, gray.clone(), fw) + 2.0;
     cf = pdf.paragraph(MARGIN_X, cf, "¹ Amazon reports land and buildings as one line (finance-lease property included within it) and its PP&E also holds large non-data-center fulfilment/logistics assets (heavy & other equipment $128.9B), so its compute share understates data-center intensity.", 7.2, gray.clone(), fw) + 2.0;
@@ -770,14 +772,14 @@ fn main() {
     cf = pdf.paragraph(MARGIN_X, cf, "\u{2075} Nebius (FY2025 20-F, US GAAP): gross PP&E $6.19B. \"Assets not yet in use\" ($2.42B) is its construction-in-progress proxy. It reports operating leases only (ROU $0.92B) — no finance leases — plus ~$9.76B of leases not yet commenced (undiscounted), the SEC-filed proxy for its data-center pipeline.", 7.2, gray.clone(), fw) + 2.0;
     pdf.paragraph(MARGIN_X, cf, "\u{2076} CoreWeave (FY2025 10-K) leases its data centers — operating-lease ROU $8.23B, owning little real estate — so its GAAP finance leases are small ($0.44B). Its leverage is debt, not leases: ~$21.4B of borrowings (GPU-collateralized term loans + 9%+ senior notes), plus $38.5B of leases not yet commenced. FY2025 RPO (backlog) $60.7B; net loss $1.17B, driven by interest on that debt.", 7.2, gray.clone(), fw);
 
-    let page2 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+    // Page 3 done (PP&E composition) — capture its ops.
+    let page3 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
-    // ===================== PAGE 3: private operators (estimates) =====================
+    // ===================== PAGE 4: private operators (estimates) =====================
     let mut t4 = 24.0f32;
     pdf.line(MARGIN_X, by(t4), "Private operators — GPU/silicon vs. construction, power & land", true, 15.0, title_c.clone(), None);
     t4 += 15.0;
-    pdf.line(MARGIN_X, by(t4), "xAI, OpenAI and Anthropic file no SEC reports. The figures below are company announcements or press/analyst ESTIMATES — not audited. They are shown apart from the SEC pages on purpose.", false, 9.0, gray.clone(), None);
-    t4 += 14.0;
+    t4 = pdf.paragraph(MARGIN_X, t4, "xAI, OpenAI and Anthropic file no SEC reports. The figures below are company announcements or press/analyst ESTIMATES — not audited. They are shown apart from the SEC pages on purpose.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
 
     let priv_head = [
         "Company / flagship",
@@ -822,13 +824,13 @@ fn main() {
     let pfw = PAGE_W - 2.0 * MARGIN_X;
     let mut pf = priv_bottom + 16.0;
     pf = pdf.paragraph(MARGIN_X, pf, "Industry rule of thumb for an all-in AI training cluster: GPUs/servers \u{2248} 60\u{2013}80% of capex, the physical facility (shell, power, cooling, land) \u{2248} 20\u{2013}40% (Epoch AI; SemiAnalysis). xAI's reported chip-only figure and OpenAI's separately-financed ~$15B for 1.2 GW of plant are both consistent with this.", 7.5, gray.clone(), pfw) + 3.0;
-    pf = pdf.paragraph(MARGIN_X, pf, "This contrasts with the public companies' audited PP&E split on page 2: there the \"compute\" and real-estate buckets are reported line items; here both sides are estimates, and for Anthropic the spend is mostly multi-year compute leases (opex) rather than owned capital.", 7.5, gray.clone(), pfw) + 3.0;
+    pf = pdf.paragraph(MARGIN_X, pf, "This contrasts with the public companies' audited PP&E split on page 3: there the \"compute\" and real-estate buckets are reported line items; here both sides are estimates, and for Anthropic the spend is mostly multi-year compute leases (opex) rather than owned capital.", 7.5, gray.clone(), pfw) + 3.0;
     pdf.paragraph(MARGIN_X, pf, "Links to each operator's primary announcement are in the Capex column on page 1.", 7.5, gray.clone(), pfw);
 
-    let page3 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
+    let page4 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 
     // ---- Save ----
-    doc.with_pages(vec![page1, page2, page3]);
+    doc.with_pages(vec![page1, page2, page3, page4]);
     let mut sw: Vec<printpdf::PdfWarnMsg> = Vec::new();
     let bytes = doc.save(&PdfSaveOptions::default(), &mut sw);
     std::fs::write("pdf/datacenter_sources.pdf", &bytes).expect("write pdf");

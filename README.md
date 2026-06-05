@@ -10,15 +10,15 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 
 - [`png/datacenter_capacity.png`](png/datacenter_capacity.png) — the chart as a
   styled table (title, header band, alternating rows, wrapped cells).
-- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **3 pages**, A4
+- [`pdf/datacenter_sources.pdf`](pdf/datacenter_sources.pdf) — **4 pages**, A4
   landscape: (1) the same table, where each row's **Capex** cell carries a
   clickable source link (public → FY2025 **10-K on sec.gov**, or **20-F** for
   Nebius; private → primary announcement); (2) a **SEC financials** page (capex
-  FY23–25, PP&E, operating cash flow, capex÷OCF, leases-not-yet-commenced) plus a
-  **PP&E composition** table splitting audited PP&E into compute/servers vs. real
+  FY23–25, PP&E, operating cash flow, capex÷OCF, leases-not-yet-commenced); (3) a
+  **PP&E composition** page splitting audited PP&E into compute/servers vs. real
   estate vs. construction-in-progress vs. finance-lease ROU, each row linked to
   its filing;
-  (3) a **private operators** page with press/analyst estimates of the
+  (4) a **private operators** page with press/analyst estimates of the
   GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
   (clearly separated from the SEC pages, as none of the three file with the SEC).
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
@@ -125,10 +125,10 @@ to **both** LinkedIn and X with an SEC-specific caption:
 cargo run --release --bin datacenter_chart -- --post-sec   # needs pdftoppm + the PDF
 ```
 
-### Post all three PDF pages
+### Post all four PDF pages
 
-`--post-pdf` rasterizes **all three** PDF pages (`pdftoppm -r 200` →
-`png/pdf_page-{1,2,3}.png`) and publishes them as a **single multi-image post**
+`--post-pdf` rasterizes **all four** PDF pages (`pdftoppm -r 200` →
+`png/pdf_page-{1,2,3,4}.png`) and publishes them as a **single multi-image post**
 to **LinkedIn** (`multiImage`) and, best-effort, to **X** (up to 4 images). The
 caption always links to the full clickable PDF on GitHub. Network-restricted
 variants:

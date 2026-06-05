@@ -25,10 +25,10 @@ cargo run --release --bin datacenter_chart -- --post-linkedin  # render PNG, the
 # X/Twitter (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --post-twitter   # alias --post-x; flags compose with --post-linkedin
 cargo run --release --bin datacenter_chart -- --post-sec       # render PDF page 2 -> png/sec_financials.png, post to both
-cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 3 PDF pages -> png/pdf_page-{1,2,3}.png, post as ONE multi-image post to LinkedIn + X
+cargo run --release --bin datacenter_chart -- --post-pdf       # rasterize all 4 PDF pages -> png/pdf_page-{1,2,3,4}.png, post as ONE multi-image post to LinkedIn + X
 cargo run --release --bin datacenter_chart -- --post-pdf-li    # same, LinkedIn only
 cargo run --release --bin datacenter_chart -- --post-pdf-x     # same, X only (multi-image)
-cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 3 pages to X as a reply-chain thread
+cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 4 pages to X as a reply-chain thread
 cargo run --release --bin datacenter_chart -- --post-pdf-doc   # post pdf/datacenter_sources.pdf to LinkedIn as a NATIVE document (Documents API)
 cargo run --release --bin datacenter_chart -- --post-spacex-doc # post pdf/spacex_exposure.pdf to LinkedIn as a NATIVE document (German caption)
 cargo run --release --bin datacenter_chart -- --post-png <path> <caption>  # post one PNG as a plain standalone tweet
@@ -37,7 +37,7 @@ cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 
 `--post-pdf` posts to LinkedIn (`multiImage`) and best-effort to X; it still
 succeeds if LinkedIn posts even when X fails. `--post-pdf-li`/`--post-pdf-x`
-restrict to one network; `--post-pdf-thread` posts the 3 pages to X as a
+restrict to one network; `--post-pdf-thread` posts the 4 pages to X as a
 reply-chain (one single-image tweet per page).
 
 **X pay-per-use posting (mid-2026)** — `POST /2/media/upload` always succeeds,
@@ -69,24 +69,28 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   `ab_glyph` crates. Hand-rolled table layout: a `rows: Vec<[Cell; NCOL]>`
   drives fixed-width columns; `wrap_text` reflows cell text; row heights derive
   from the tallest wrapped cell; glyphs are rasterized with alpha blending.
-- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the **3-page** PDF
+- `src/bin/datacenter_pdf.rs` (`datacenter_pdf`) — renders the **4-page** PDF
   with `printpdf` 0.9 (an `Op`-based document model). Filled header/row
   rectangles (`Op::DrawPolygon` with `PaintMode::Fill` — note
   `Op::DrawRectangle` does **not** fill in 0.9), grid lines, and per-row source
   hyperlinks (`Op::LinkAnnotation` with `Actions::Uri`). Page 1: the capacity
-  table (`rows: [Row; _]`). Page 2: the SEC-financials table (`[Sec; _]`) plus a
-  **PP&E-composition** table (compute/servers vs. real estate vs.
-  construction-in-progress vs. finance-lease ROU, FY2025 gross per filing). Note
-  **Nebius** (NBIS) is a foreign private issuer: it files Form **20-F** (US GAAP),
-  not a 10-K, so its source links read "20-F ↗" — the `Sec` struct carries a
-  `form` field for the SEC table, and the PP&E-composition label switches on
-  `co.starts_with("Nebius")`. Page 3:
-  **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates* — press/
-  analyst, not SEC. The two later tables are drawn by the reusable
-  `Pdf::draw_table` helper (header band + alternating rows + grid; each cell is
-  `(text, bold, color, Option<url>)`); long footnotes use `Pdf::paragraph`
-  (word-wrapped — plain `Pdf::line` does **not** wrap and will overflow the page).
-  `--post-sec` still rasterizes **page 2** only.
+  table (`rows: [Row; _]`). Page 2: the SEC-financials table (`[Sec; _]`) with
+  its footnotes. Page 3: the **PP&E-composition** table (compute/servers vs.
+  real estate vs. construction-in-progress vs. finance-lease ROU, FY2025 gross
+  per filing) with its footnotes. (Pages 2+3 were one page until the footnotes
+  were word-wrapped — wrapped, they no longer fit together, so the SEC table and
+  the composition table each got their own page.) Note **Nebius** (NBIS) is a
+  foreign private issuer: it files Form **20-F** (US GAAP), not a 10-K, so its
+  source links read "20-F ↗" — the `Sec` struct carries a `form` field for the
+  SEC table, and the PP&E-composition label switches on `co.starts_with("Nebius")`.
+  Page 4: **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates*
+  — press/analyst, not SEC. The composition and private tables are drawn by the
+  reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
+  cell is `(text, bold, color, Option<url>)`). **All subtitles and footnotes use
+  the word-wrapping `Pdf::paragraph` (which returns the running `y`, so blocks
+  flow down the page); plain `Pdf::line` does NOT wrap and overflows the right
+  edge — only use it for short single-line titles.** `--post-sec` still
+  rasterizes **page 2** only (still the SEC-financials table).
 - `src/bin/spacex_exposure.rs` (`spacex_exposure`) — renders a **1-page** A4
   PDF (`pdf/spacex_exposure.pdf`) of publicly-accessible funds that hold SpaceX
   equity, each row linking to the SEC filing (N-PORT / N-CSR) that discloses the
@@ -135,8 +139,8 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   `chart_caption()` is the default (links directly to the PDF on GitHub; X has no
   PDF attachment). `--post-sec` (in `main.rs`) shells out to `pdftoppm` to
   rasterize PDF page 2 → `png/sec_financials.png` and posts it to both networks
-  with an SEC caption. `--post-pdf` (in `main.rs`) rasterizes all 3 PDF pages →
-  `png/pdf_page-{1,2,3}.png` and posts them as ONE multi-image post via
+  with an SEC caption. `--post-pdf` (in `main.rs`) rasterizes all 4 PDF pages →
+  `png/pdf_page-{1,2,3,4}.png` and posts them as ONE multi-image post via
   `twitter::publish_images(paths, caption)` (shared `upload_media` +
   `create_tweet` helpers; up to 4 images) and `linkedin::publish_images`.
   `create_tweet` takes an optional `reply_to` tweet id and returns the new

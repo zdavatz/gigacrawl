@@ -122,10 +122,11 @@ fn main() {
         }
         let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
         let caption = format!(
-            "The AI data-center buildout, in one document — capacity, SEC financials, and the private players. Swipe through all three pages:\n\n\
+            "The AI data-center buildout, in one document — capacity, SEC financials, and the private players. Swipe through all four pages:\n\n\
             1/ Power capacity (GW), operational vs. planned, with FY2025 capex & est. $/GW — Amazon, Microsoft, Google, Meta, Oracle, xAI, OpenAI, Anthropic.\n\
-            2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\" — plus where the capital actually sits (compute/servers vs. real estate), straight from each property & equipment note. Incl. Oracle (RPO backlog $553B; FY26 capex ~$50B).\n\
-            3/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land.\n\n\
+            2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\". Incl. Oracle (RPO backlog $553B; FY26 capex ~$50B).\n\
+            3/ Where the capital actually sits — compute/servers vs. real estate vs. construction-in-progress, straight from each property & equipment note.\n\
+            4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land.\n\n\
             Every figure links to its SEC 10-K — download the PDF (here, or on GitHub) to click through: {pdf_url}\n\
             #AI #DataCenters #CapEx #SEC"
         );
@@ -274,12 +275,12 @@ fn main() {
         return;
     }
 
-    // `--post-pdf-thread`: rasterize all three PDF pages and post them to X as a
+    // `--post-pdf-thread`: rasterize all four PDF pages and post them to X as a
     // reply-chain THREAD (one single-image tweet per page). This is the
     // workaround for X pay-per-use rejecting *multi*-image posts (403) while
     // single-image posts succeed.
     if args.iter().any(|a| a == "--post-pdf-thread") {
-        let pages = ["png/pdf_page-1.png", "png/pdf_page-2.png", "png/pdf_page-3.png"];
+        let pages = ["png/pdf_page-1.png", "png/pdf_page-2.png", "png/pdf_page-3.png", "png/pdf_page-4.png"];
         let rendered = std::process::Command::new("pdftoppm")
             .args(["-png", "-r", "200", "pdf/datacenter_sources.pdf", "png/pdf_page"])
             .status();
@@ -293,15 +294,18 @@ fn main() {
         let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
         let captions = [
             format!(
-                "🧵 The AI data-center buildout, in three charts (full clickable PDF at the end).\n\n\
+                "🧵 The AI data-center buildout, in four charts (full clickable PDF at the end).\n\n\
                 1/ Power capacity (GW) — operational vs. planned — with FY2025 capex & est. $/GW: Amazon, Microsoft, Google, Meta, Oracle, xAI, OpenAI, Anthropic.\n\
                 #AI #DataCenters #CapEx"
             ),
             format!(
-                "2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\" — plus where the capital actually sits (compute/servers vs. real estate), straight from each property & equipment note. Now incl. Oracle (RPO backlog $553B; FY26 capex ~$50B)."
+                "2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\". Now incl. Oracle (RPO backlog $553B; FY26 capex ~$50B)."
             ),
             format!(
-                "3/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land. It's why xAI's plant looks cheap — they cut the facility cost, but the GPUs still dominate the all-in.\n\n\
+                "3/ Where the capital actually sits — compute/servers vs. real estate vs. construction-in-progress, straight from each property & equipment note. SEC filings do not isolate GPU spend."
+            ),
+            format!(
+                "4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land. It's why xAI's plant looks cheap — they cut the facility cost, but the GPUs still dominate the all-in.\n\n\
                 Full clickable PDF (every figure links to its SEC 10-K):\n{pdf_url}"
             ),
         ];
@@ -311,7 +315,7 @@ fn main() {
             .map(|(p, c)| (std::path::Path::new(*p), c))
             .collect();
         match twitter::publish_thread(&items) {
-            Ok(u) => println!("Posted all 3 PDF pages to X as a thread: {u}"),
+            Ok(u) => println!("Posted all 4 PDF pages to X as a thread: {u}"),
             Err(e) => {
                 eprintln!("[twitter] thread post failed: {e}");
                 std::process::exit(1);
@@ -320,14 +324,14 @@ fn main() {
         return;
     }
 
-    // `--post-pdf`: rasterize all three PDF pages to PNGs and post them as a
+    // `--post-pdf`: rasterize all four PDF pages to PNGs and post them as a
     // single multi-image post — to LinkedIn (multiImage) and, best-effort, to X
     // (which currently 403s on pay-per-use writes). Always links to the full
     // PDF on GitHub. `--post-pdf-x` restricts to X only; default does both.
     if args.iter().any(|a| a == "--post-pdf" || a == "--post-pdf-x" || a == "--post-pdf-li") {
         let x_only = args.iter().any(|a| a == "--post-pdf-x");
         let li_only = args.iter().any(|a| a == "--post-pdf-li");
-        let pages = ["png/pdf_page-1.png", "png/pdf_page-2.png", "png/pdf_page-3.png"];
+        let pages = ["png/pdf_page-1.png", "png/pdf_page-2.png", "png/pdf_page-3.png", "png/pdf_page-4.png"];
         let rendered = std::process::Command::new("pdftoppm")
             .args([
                 "-png", "-r", "200",
@@ -344,10 +348,11 @@ fn main() {
         let paths: Vec<&std::path::Path> = pages.iter().map(|p| std::path::Path::new(*p)).collect();
         let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
         let caption = format!(
-            "AI data-center buildout in three views — the full clickable PDF (every figure links to its SEC 10-K) is on GitHub:\n\n\
+            "AI data-center buildout in four views — the full clickable PDF (every figure links to its SEC 10-K) is on GitHub:\n\n\
             1/ Power capacity (GW), operational vs. planned, with FY2025 capex & est. $/GW — Amazon, Microsoft, Google, Meta, Oracle, xAI, OpenAI, Anthropic.\n\
-            2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\" — plus where the capital actually sits (compute/servers vs. real estate), straight from each property & equipment note. Now incl. Oracle (RPO backlog $553B, FY26 capex ~$50B).\n\
-            3/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land. It's why xAI's plant looks cheap — they cut the facility cost, but GPUs still dominate the all-in.\n\n\
+            2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\". Now incl. Oracle (RPO backlog $553B, FY26 capex ~$50B).\n\
+            3/ Where the capital actually sits — compute/servers vs. real estate vs. construction-in-progress, straight from each property & equipment note.\n\
+            4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land. It's why xAI's plant looks cheap — they cut the facility cost, but GPUs still dominate the all-in.\n\n\
             Full PDF: {pdf_url}\n\
             #AI #DataCenters #CapEx #SEC"
         );
@@ -355,13 +360,13 @@ fn main() {
         let mut ok = false;
         if !x_only {
             match linkedin::publish_images(&paths, &caption, title) {
-                Ok(u) => { println!("Posted all 3 PDF pages to LinkedIn: {u}"); ok = true; }
+                Ok(u) => { println!("Posted all 4 PDF pages to LinkedIn: {u}"); ok = true; }
                 Err(e) => eprintln!("[linkedin] post failed: {e}"),
             }
         }
         if !li_only {
             match twitter::publish_images(&paths, &caption) {
-                Ok(u) => { println!("Posted all 3 PDF pages to X: {u}"); ok = true; }
+                Ok(u) => { println!("Posted all 4 PDF pages to X: {u}"); ok = true; }
                 Err(e) => eprintln!("[twitter] post failed: {e}"),
             }
         }
