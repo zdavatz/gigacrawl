@@ -85,13 +85,16 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   source links read "20-F ↗" — the `Sec` struct carries a `form` field for the
   SEC table, and the PP&E-composition label switches on `co.starts_with("Nebius")`.
   Page 4: **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates*
-  — press/analyst, not SEC. Page 5: **off-grid vs on-grid per SEC filing** — an
-  `og: [(operator, classification, color, evidence, url, form); 8]` table
-  showing that **0 of 7 SEC filers disclose** campus-level grid-vs-self-gen;
-  CoreWeave/Nebius only imply on-grid; the off-grid gas build-out (xAI turbines,
-  Meta's Williams plant, Crusoe/Stargate) is **absent from all 10-Ks** and
-  press/satellite-sourced (Cleanview). The composition, private and off-grid
-  tables are drawn by the reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
+  — press/analyst, not SEC. Page 5: **off-grid vs on-grid CAPACITY** — an
+  `og: [(operator, off_grid_text, on_grid_text, on_grid_is_sec); 10]` table with
+  an amber off-grid/behind-the-meter capacity column (press/permit/satellite,
+  NOT in SEC) and an on-grid column shown **green only when the figure is
+  actually SEC-disclosed** (just CoreWeave's 10-K & Nebius's 20-F active/
+  contracted GW; everything else is analyst estimate). The footnotes give the
+  capacity split (Cleanview: ~56 GW planned off-grid ≈ 30% of the US pipeline,
+  ~2 GW online, mostly gas; the other ~70% grid) and note 0 of 7 filers disclose
+  any off-grid capacity. The composition, private and off-grid tables are drawn
+  by the reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
   cell is `(text, bold, color, Option<url>)`). **All subtitles and footnotes use
   the word-wrapping `Pdf::paragraph` (which returns the running `y`, so blocks
   flow down the page); plain `Pdf::line` does NOT wrap and overflows the right
