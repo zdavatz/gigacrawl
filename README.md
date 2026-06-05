@@ -24,15 +24,24 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
 - [`pdf/spacex_exposure.pdf`](pdf/spacex_exposure.pdf) — a separate one-page A4
-  landscape table of **publicly-accessible funds that already hold SpaceX**
-  (Space Exploration Technologies) equity — i.e. ways to get "pre-IPO" exposure
-  today. SpaceX is private (files only Form D), so each holder's stake is
-  disclosed in its own **Form N-PORT / N-CSR**; every row links to the verified
-  filing on sec.gov. Ordered by SpaceX share of the fund (Destiny Tech100 /
-  DXYZ, the Baron and ARK funds, StepStone, Private Shares Fund, Coatue, BCAT),
-  with footnotes on the diversified families holding small positions and the
-  Alphabet (GOOGL) historical-disclosure caveat. Built by the `spacex_exposure`
-  binary.
+  landscape table of **publicly-accessible funds that hold SpaceX**
+  (Space Exploration Technologies) equity — who owns it going into its IPO, and
+  what the stake is worth. SpaceX had been private (Form D only), so each
+  holder's stake is disclosed in its own **Form N-PORT / N-CSR**; every row
+  links to the verified filing on sec.gov. Columns: **SpaceX now (USD)** = the
+  total fair value of all SpaceX lines in that filing (common share classes +
+  preferred series + SPVs, summed); **Value at est. IPO** = that mark scaled by
+  an illustrative $1.5–2T range (~1.2×–1.6× the ~$1.25T combined SpaceX+xAI
+  valuation the marks reflect; the reported $1.77T IPO pricing is ~1.42×, inside
+  the range) — a press-estimate sensitivity, **not** audited. Holders include
+  Destiny Tech100 (DXYZ), the Baron and ARK funds, StepStone, Private Shares
+  Fund, Coatue and BCAT; the two NYSE-listed funds (DXYZ, BCAT) show "— listed"
+  for the IPO column since they are already market-priced. Footnotes cover the
+  2 Feb 2026 SpaceX/xAI merger (the marks carry SpaceX common at the
+  merger-implied ~$526.6/share, so part of each value is xAI), the diversified
+  families holding small positions, and the Alphabet (GOOGL) historical-
+  disclosure caveat. Built by the `spacex_exposure` binary; posted to LinkedIn
+  as a native document by `datacenter_chart --post-spacex-doc`.
 
 Covered: Amazon (AWS), Microsoft (Azure), Google (Cloud), Meta, Oracle (OCI),
 CoreWeave (CRWV), xAI, Nebius (NBIS), OpenAI, Anthropic — ordered by estimated

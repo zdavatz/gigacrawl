@@ -15,7 +15,8 @@ figures sourced from SEC 10-K filings. Two outputs: a PNG chart and a linked PDF
 ```sh
 cargo run --release --bin datacenter_chart   # -> png/datacenter_capacity.png
 cargo run --release --bin datacenter_pdf      # -> pdf/datacenter_sources.pdf
-cargo build --release                         # build both binaries
+cargo run --release --bin spacex_exposure     # -> pdf/spacex_exposure.pdf
+cargo build --release                         # build all binaries
 
 # LinkedIn (datacenter_chart only):
 cargo run --release --bin datacenter_chart -- --auth           # OAuth, writes linkedin_token.json
@@ -29,6 +30,7 @@ cargo run --release --bin datacenter_chart -- --post-pdf-li    # same, LinkedIn 
 cargo run --release --bin datacenter_chart -- --post-pdf-x     # same, X only (multi-image)
 cargo run --release --bin datacenter_chart -- --post-pdf-thread # post the 3 pages to X as a reply-chain thread
 cargo run --release --bin datacenter_chart -- --post-pdf-doc   # post pdf/datacenter_sources.pdf to LinkedIn as a NATIVE document (Documents API)
+cargo run --release --bin datacenter_chart -- --post-spacex-doc # post pdf/spacex_exposure.pdf to LinkedIn as a NATIVE document (German caption)
 cargo run --release --bin datacenter_chart -- --post-png <path> <caption>  # post one PNG as a plain standalone tweet
 cargo run --release --bin datacenter_chart -- --delete-tweet <id>
 ```
@@ -57,9 +59,11 @@ There is no test suite. Verify changes by rendering and inspecting the output
 
 ## Architecture
 
-Two independent binaries (declared in `Cargo.toml`); there is **no shared
-library** — the dataset is duplicated in each, so a content change must be
-applied in both files:
+Three independent binaries (declared in `Cargo.toml`); there is **no shared
+library** — the PNG/PDF data-center dataset is duplicated in `datacenter_chart`
+and `datacenter_pdf`, so a content change must be applied in both files. The
+`spacex_exposure` binary is standalone (its own dataset; it copies the same
+`printpdf` `Pdf` helper struct rather than sharing it):
 
 - `src/main.rs` (`datacenter_chart`) — renders the PNG with the `image` +
   `ab_glyph` crates. Hand-rolled table layout: a `rows: Vec<[Cell; NCOL]>`
@@ -83,6 +87,24 @@ applied in both files:
   `(text, bold, color, Option<url>)`); long footnotes use `Pdf::paragraph`
   (word-wrapped — plain `Pdf::line` does **not** wrap and will overflow the page).
   `--post-sec` still rasterizes **page 2** only.
+- `src/bin/spacex_exposure.rs` (`spacex_exposure`) — renders a **1-page** A4
+  PDF (`pdf/spacex_exposure.pdf`) of publicly-accessible funds that hold SpaceX
+  equity, each row linking to the SEC filing (N-PORT / N-CSR) that discloses the
+  stake. It copies the same `Pdf` helper struct as `datacenter_pdf` (note: its
+  link-underline width is multiplied by `WRAP_FUDGE` so the underline spans the
+  full rendered label — `ab_glyph` under-measures poppler ~12%; the original
+  `datacenter_pdf` does **not** do this, fine for its short labels). A `Holder`
+  struct drives the table; columns are **SpaceX now (USD)** (sum of all SpaceX
+  lines in the filing — common share classes + preferred series + SPVs) and
+  **Value at est. IPO** (that mark × an illustrative 1.2×–1.6×, i.e. a $1.5–2T
+  IPO over the ~$1.25T combined SpaceX+xAI mark; the reported $1.77T pricing is
+  ~1.42×). Holdings figures were located via SEC EDGAR full-text search
+  (efts.sec.gov) for the exact phrase "Space Exploration Technologies" and each
+  filing line verified; USD values are summed per fund. The two NYSE-listed
+  funds (DXYZ, BCAT) show "— listed" in the IPO column (already market-priced).
+  Posted to LinkedIn as a native document via `--post-spacex-doc` (German
+  caption hard-coded in `main.rs`) and to X as a rasterized PNG
+  (`png/spacex_exposure.png`) via `--post-png`.
 - `src/linkedin.rs` — LinkedIn OAuth + image publishing, used only by
   `datacenter_chart` (via `mod linkedin;`). Self-contained: blocking `reqwest`
   + a `std::net::TcpListener` callback server on port 8092 (no tokio). Uses
