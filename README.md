@@ -20,7 +20,10 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   its filing;
   (4) a **private operators** page with press/analyst estimates of the
   GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
-  (clearly separated from the SEC pages, as none of the three file with the SEC);
+  (clearly separated from the SEC pages, as none of the three file with the SEC —
+  the one exception being xAI's compute, sold via SpaceX, whose IPO Free Writing
+  Prospectus discloses a Google compute deal at **$920M/mo for ~110k GPUs**,
+  Oct 2026–Jun 2029);
   (5) an **off-grid vs on-grid** page showing what each SEC filing actually
   discloses about how the data centers are powered — the finding being that
   **0 of 7 filers** state grid vs. self-generation at the campus level, and the

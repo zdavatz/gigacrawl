@@ -312,6 +312,10 @@ const CRWV: &str = "https://www.sec.gov/Archives/edgar/data/1769628/000176962826
 // Behind-the-meter / off-grid build-out: press/analyst, not in any SEC filing.
 const CLEANVIEW: &str = "https://cleanview.co/reports/behind-the-meter-data-centers";
 const XAI: &str = "https://x.ai/news/anthropic-compute-partnership";
+// SpaceX IPO Free Writing Prospectus (Rule 433, File 333-296070, filed 5 Jun 2026):
+// discloses the Google Cloud Service Agreement — $920M/mo, ~110k Nvidia GPUs,
+// Oct 2026–Jun 2029. The first xAI/SpaceX compute contract to appear in an SEC filing.
+const SPACEX_FWP: &str = "https://www.sec.gov/Archives/edgar/data/1181412/000162828026041150/spacexagreementfwp.htm";
 const OPENAI: &str = "https://openai.com/index/five-new-stargate-sites/";
 const ANTHROPIC: &str = "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure";
 
@@ -426,9 +430,9 @@ fn main() {
             planned: "Further expansions (roadmap to much larger)",
             capex: "Private",
             cost_gw: "~$9–15B/GW (all-in)",
-            links: &[("source ↗", XAI)],
+            links: &[("source ↗", XAI), ("FWP ↗", SPACEX_FWP)],
             sites: "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
-            notes: "Colossus 2 among first ~GW-scale single sites. Colossus 1 output leased to Anthropic ($1.25B/mo through 2029).",
+            notes: "Colossus 2 among first ~GW-scale single sites. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs, Oct 2026–Jun 2029 (SpaceX IPO FWP, 5 Jun 2026 — first such contract in an SEC filing).",
         },
         Row {
             company: "Nebius (NBIS)",
@@ -827,6 +831,7 @@ fn main() {
     let mut pf = priv_bottom + 16.0;
     pf = pdf.paragraph(MARGIN_X, pf, "Industry rule of thumb for an all-in AI training cluster: GPUs/servers \u{2248} 60\u{2013}80% of capex, the physical facility (shell, power, cooling, land) \u{2248} 20\u{2013}40% (Epoch AI; SemiAnalysis). xAI's reported chip-only figure and OpenAI's separately-financed ~$15B for 1.2 GW of plant are both consistent with this.", 7.5, gray.clone(), pfw) + 3.0;
     pf = pdf.paragraph(MARGIN_X, pf, "This contrasts with the public companies' audited PP&E split on page 3: there the \"compute\" and real-estate buckets are reported line items; here both sides are estimates, and for Anthropic the spend is mostly multi-year compute leases (opex) rather than owned capital.", 7.5, gray.clone(), pfw) + 3.0;
+    pf = pdf.paragraph(MARGIN_X, pf, "One exception to \"file nothing\": xAI's compute is sold through SpaceX, which is now going public. SpaceX's IPO Free Writing Prospectus (Rule 433, File 333-296070, filed 5 Jun 2026) discloses a Cloud Service Agreement with Google \u{2014} $920M/mo for ~110k Nvidia GPUs + CPUs/memory, Oct 2026\u{2013}Jun 2029 (~$11B/yr, ~$30B over the term), ramping at a reduced fee through Sep 2026. Together with the Anthropic lease ($1.25B/mo for Colossus 1), this is the first xAI/SpaceX compute revenue to surface in an SEC filing \u{2014} the rest of this page remains press/analyst estimate.", 7.5, gray.clone(), pfw) + 3.0;
     pdf.paragraph(MARGIN_X, pf, "Links to each operator's primary announcement are in the Capex column on page 1.", 7.5, gray.clone(), pfw);
 
     let page4 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));

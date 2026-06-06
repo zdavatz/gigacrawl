@@ -563,7 +563,7 @@ fn main() {
                 SITE_FG,
             ),
             Cell::new(
-                "Colossus 2 is among the first ~GW-scale single sites. Colossus 1 output now committed to Anthropic ($1.25B/mo through 2029).",
+                "Colossus 2 is among the first ~GW-scale single sites. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs Oct 2026–Jun 2029 (SpaceX IPO FWP, 5 Jun 2026).",
                 Style::Regular,
                 NOTE_FG,
             ),

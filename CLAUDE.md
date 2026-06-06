@@ -85,7 +85,12 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   source links read "20-F ↗" — the `Sec` struct carries a `form` field for the
   SEC table, and the PP&E-composition label switches on `co.starts_with("Nebius")`.
   Page 4: **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates*
-  — press/analyst, not SEC. Page 5: **off-grid vs on-grid CAPACITY** — an
+  — press/analyst, not SEC, with **one SEC exception** footnoted: xAI's compute is
+  sold via SpaceX, whose IPO Free Writing Prospectus (`SPACEX_FWP`, Rule 433, File
+  333-296070, filed 5 Jun 2026) discloses a Google Cloud Service Agreement —
+  $920M/mo for ~110k Nvidia GPUs, Oct 2026–Jun 2029. The xAI page-1 row carries a
+  second `FWP ↗` link to it (like Alphabet's second FWP link) and its Key Notes
+  name both the Google and Anthropic ($1.25B/mo) compute leases. Page 5: **off-grid vs on-grid CAPACITY** — an
   `og: [(operator, off_grid_text, on_grid_text, on_grid_is_sec); 10]` table with
   an amber off-grid/behind-the-meter capacity column (press/permit/satellite,
   NOT in SEC) and an on-grid column shown **green only when the figure is
