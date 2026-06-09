@@ -123,12 +123,13 @@ fn main() {
         let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
         let caption = format!(
             "The AI data-center buildout, in one document — capacity, SEC financials, and the private players. Swipe through all five pages:\n\n\
+            New this week: xAI's compute finally shows up in an SEC filing. SpaceX's IPO prospectus (FWP, 5 Jun 2026) discloses a Google cloud deal — $920M/month for ~110,000 Nvidia GPUs, Oct 2026–Jun 2029 (~$30B over the term). With the Anthropic lease ($1.25B/mo for Colossus 1), that's the first xAI/SpaceX compute revenue any regulator has seen on paper. It's linked on page 1 and footnoted on page 4.\n\n\
             1/ Power capacity (GW), operational vs. planned, with FY2025 capex & est. $/GW — Amazon, Microsoft, Google, Meta, Oracle, xAI, OpenAI, Anthropic.\n\
             2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\". Incl. Oracle (RPO backlog $553B; FY26 capex ~$50B).\n\
             3/ Where the capital actually sits — compute/servers vs. real estate vs. construction-in-progress, straight from each property & equipment note.\n\
-            4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land.\n\
+            4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land — plus the SpaceX FWP exception above.\n\
             5/ Off-grid vs on-grid: what the SEC filings actually disclose about how the data centers are powered (spoiler: almost nothing — the behind-the-meter gas build-out is invisible to 10-Ks).\n\n\
-            Every figure links to its SEC 10-K — download the PDF (here, or on GitHub) to click through: {pdf_url}\n\
+            Every figure links to its SEC filing — download the PDF (here, or on GitHub) to click through: {pdf_url}\n\
             #AI #DataCenters #CapEx #SEC"
         );
         let title = "AI Data-Center Capacity & SEC Financials";
@@ -549,7 +550,7 @@ fn main() {
         ],
         [
             Cell::new("xAI", Style::Bold, COMPANY_FG),
-            Cell::new("~0.8 GW live, ~2 GW total/building (Colossus, Memphis)", Style::Regular, CELL_FG),
+            Cell::new("~1.0 GW compute (Colossus I+II — SEC: SpaceX IPO prospectus), ~2 GW building", Style::Regular, CELL_FG),
             Cell::new(
                 "Further expansions (roadmap to much larger)",
                 Style::Regular,
@@ -558,12 +559,12 @@ fn main() {
             Cell::new("Private — n/a", Style::Regular, NOTE_FG),
             Cell::new("~$9–15B/GW (all-in)", Style::Bold, COSTGW_FG),
             Cell::new(
-                "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
+                "Memphis, TN — Colossus 1 (~0.3 GW; ~230k GPUs; first 100k H100 / ~130 MW in 122 days) + Colossus 2 (first 110k GB200 / ~210 MW in 91 days; ≥220k GB300 / >400 MW next); power hub in Southaven, MS",
                 Style::Regular,
                 SITE_FG,
             ),
             Cell::new(
-                "Colossus 2 is among the first ~GW-scale single sites. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs Oct 2026–Jun 2029 (SpaceX IPO FWP, 5 Jun 2026).",
+                "Capacity per SpaceX IPO prospectus (8 Jun 2026) — the only press-row GW here that is SEC-disclosed. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs Oct 2026–Jun 2029 (FWP, 5 Jun 2026).",
                 Style::Regular,
                 NOTE_FG,
             ),

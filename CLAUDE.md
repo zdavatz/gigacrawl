@@ -85,20 +85,27 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   source links read "20-F ↗" — the `Sec` struct carries a `form` field for the
   SEC table, and the PP&E-composition label switches on `co.starts_with("Nebius")`.
   Page 4: **private operators** (xAI/OpenAI/Anthropic) GPU-vs-plant *estimates*
-  — press/analyst, not SEC, with **one SEC exception** footnoted: xAI's compute is
+  — press/analyst, not SEC, with the **SEC exceptions** footnoted: xAI's compute is
   sold via SpaceX, whose IPO Free Writing Prospectus (`SPACEX_FWP`, Rule 433, File
   333-296070, filed 5 Jun 2026) discloses a Google Cloud Service Agreement —
-  $920M/mo for ~110k Nvidia GPUs, Oct 2026–Jun 2029. The xAI page-1 row carries a
-  second `FWP ↗` link to it (like Alphabet's second FWP link) and its Key Notes
-  name both the Google and Anthropic ($1.25B/mo) compute leases. Page 5: **off-grid vs on-grid CAPACITY** — an
+  $920M/mo for ~110k Nvidia GPUs, Oct 2026–Jun 2029 — and whose second FWP
+  (`SPACEX_EU_FWP`, 8 Jun 2026, attaching the BaFin-approved EU retail prospectus)
+  discloses **Colossus I+II ≈1.0 GW of compute power** (C1 first cluster ~100k
+  H100/~130 MW in 122 days; C2 ~110k GB200/~210 MW in 91 days; ≥220k GB300/
+  >400 MW next) — the first GW figure for xAI in an SEC-filed document. The xAI
+  page-1 row carries a second `FWP ↗` link (like Alphabet's second FWP link), its
+  operational cell cites the prospectus ~1.0 GW, and its Key Notes name both the
+  Google and Anthropic ($1.25B/mo) compute leases. Page 5: **off-grid vs on-grid CAPACITY** — an
   `og: [(operator, off_grid_text, on_grid_text, on_grid_is_sec); 10]` table with
   an amber off-grid/behind-the-meter capacity column (press/permit/satellite,
   NOT in SEC) and an on-grid column shown **green only when the figure is
-  actually SEC-disclosed** (just CoreWeave's 10-K & Nebius's 20-F active/
-  contracted GW; everything else is analyst estimate). The footnotes give the
+  actually SEC-disclosed** (CoreWeave's 10-K & Nebius's 20-F active/contracted
+  GW, plus xAI's ~1.0 GW via the SpaceX prospectus — flagged "off-grid by
+  design"; everything else is analyst estimate). The footnotes give the
   capacity split (Cleanview: ~56 GW planned off-grid ≈ 30% of the US pipeline,
-  ~2 GW online, mostly gas; the other ~70% grid) and note 0 of 7 filers disclose
-  any off-grid capacity. The composition, private and off-grid tables are drawn
+  ~2 GW online, mostly gas; the other ~70% grid) and note that NO filer disclose
+  any off-grid capacity or grid split (SpaceX's prospectus included), with a
+  linked SpaceX-FWP source line under the Cleanview link. The composition, private and off-grid tables are drawn
   by the reusable `Pdf::draw_table` helper (header band + alternating rows + grid; each
   cell is `(text, bold, color, Option<url>)`). **All subtitles and footnotes use
   the word-wrapping `Pdf::paragraph` (which returns the running `y`, so blocks

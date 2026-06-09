@@ -316,6 +316,11 @@ const XAI: &str = "https://x.ai/news/anthropic-compute-partnership";
 // discloses the Google Cloud Service Agreement — $920M/mo, ~110k Nvidia GPUs,
 // Oct 2026–Jun 2029. The first xAI/SpaceX compute contract to appear in an SEC filing.
 const SPACEX_FWP: &str = "https://www.sec.gov/Archives/edgar/data/1181412/000162828026041150/spacexagreementfwp.htm";
+// SpaceX FWP of 8 Jun 2026: attaches the BaFin-approved EU retail prospectus, which
+// discloses Colossus I+II ≈1.0 GW of compute power (C1 first cluster ~100k H100/~130 MW
+// in 122 days; C2 first cluster ~110k GB200/~210 MW in 91 days; ≥220k GB300/>400 MW next)
+// — the first GW capacity figure for xAI in an SEC-filed document.
+const SPACEX_EU_FWP: &str = "https://www.sec.gov/Archives/edgar/data/1181412/000162828026041365/eu_interviewtranscript06.htm";
 const OPENAI: &str = "https://openai.com/index/five-new-stargate-sites/";
 const ANTHROPIC: &str = "https://www.anthropic.com/news/anthropic-invests-50-billion-in-american-ai-infrastructure";
 
@@ -426,13 +431,13 @@ fn main() {
         },
         Row {
             company: "xAI",
-            operational: "~0.8 GW live, ~2 GW total/building (Colossus, Memphis)",
+            operational: "~1.0 GW compute (Colossus I+II — SEC: SpaceX IPO prospectus), ~2 GW building",
             planned: "Further expansions (roadmap to much larger)",
             capex: "Private",
             cost_gw: "~$9–15B/GW (all-in)",
             links: &[("source ↗", XAI), ("FWP ↗", SPACEX_FWP)],
-            sites: "Memphis, TN — Colossus 1 (~0.3 GW; ~230k: 150k H100/50k H200/30k GB200) + Colossus 2 (→~555k GPUs, mostly GB200); power hub in Southaven, MS",
-            notes: "Colossus 2 among first ~GW-scale single sites. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs, Oct 2026–Jun 2029 (SpaceX IPO FWP, 5 Jun 2026 — first such contract in an SEC filing).",
+            sites: "Memphis, TN — Colossus 1 (~0.3 GW; ~230k GPUs; first 100k H100 / ~130 MW in 122 days) + Colossus 2 (first 110k GB200 / ~210 MW in 91 days; ≥220k GB300 / >400 MW next); power hub in Southaven, MS",
+            notes: "Capacity per SpaceX IPO prospectus (8 Jun 2026) — the only press-row GW here that is SEC-disclosed. Compute leased out: Anthropic $1.25B/mo (Colossus 1, thru 2029) + Google $920M/mo for ~110k GPUs, Oct 2026–Jun 2029 (FWP, 5 Jun 2026).",
         },
         Row {
             company: "Nebius (NBIS)",
@@ -832,6 +837,7 @@ fn main() {
     pf = pdf.paragraph(MARGIN_X, pf, "Industry rule of thumb for an all-in AI training cluster: GPUs/servers \u{2248} 60\u{2013}80% of capex, the physical facility (shell, power, cooling, land) \u{2248} 20\u{2013}40% (Epoch AI; SemiAnalysis). xAI's reported chip-only figure and OpenAI's separately-financed ~$15B for 1.2 GW of plant are both consistent with this.", 7.5, gray.clone(), pfw) + 3.0;
     pf = pdf.paragraph(MARGIN_X, pf, "This contrasts with the public companies' audited PP&E split on page 3: there the \"compute\" and real-estate buckets are reported line items; here both sides are estimates, and for Anthropic the spend is mostly multi-year compute leases (opex) rather than owned capital.", 7.5, gray.clone(), pfw) + 3.0;
     pf = pdf.paragraph(MARGIN_X, pf, "One exception to \"file nothing\": xAI's compute is sold through SpaceX, which is now going public. SpaceX's IPO Free Writing Prospectus (Rule 433, File 333-296070, filed 5 Jun 2026) discloses a Cloud Service Agreement with Google \u{2014} $920M/mo for ~110k Nvidia GPUs + CPUs/memory, Oct 2026\u{2013}Jun 2029 (~$11B/yr, ~$30B over the term), ramping at a reduced fee through Sep 2026. Together with the Anthropic lease ($1.25B/mo for Colossus 1), this is the first xAI/SpaceX compute revenue to surface in an SEC filing \u{2014} the rest of this page remains press/analyst estimate.", 7.5, gray.clone(), pfw) + 3.0;
+    pf = pdf.paragraph(MARGIN_X, pf, "A second FWP (8 Jun 2026) attaches SpaceX's BaFin-approved EU retail prospectus, which also quantifies the hardware: Colossus I+II \u{2248}1.0 GW of compute power collectively; Colossus 1's first cluster ~100k H100 (~130 MW) online in 122 days, Colossus 2's first cluster ~110k GB200 (~210 MW) in 91 days, with \u{2265}220k GB300 and >400 MW more in the next phase \u{2014} the first GW capacity figure for xAI in an SEC-filed document (see page 5).", 7.5, gray.clone(), pfw) + 3.0;
     pdf.paragraph(MARGIN_X, pf, "Links to each operator's primary announcement are in the Capex column on page 1.", 7.5, gray.clone(), pfw);
 
     let page4 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
@@ -843,7 +849,7 @@ fn main() {
     let mut t5 = 24.0f32;
     pdf.line(MARGIN_X, by(t5), "Off-grid vs on-grid capacity — and how little of it is in the SEC filings", true, 15.0, title_c.clone(), None);
     t5 += 15.0;
-    t5 = pdf.paragraph(MARGIN_X, t5, "How each operator's data centers are powered, in GW. The off-grid / behind-the-meter column is press / permit / satellite-sourced (Cleanview) — it does NOT appear in any SEC filing. On-grid capacity is an SEC figure ONLY for CoreWeave (10-K) and Nebius (20-F), shown in green; every other GW here is a press/analyst estimate, since the hyperscalers disclose no capacity and xAI/OpenAI/Anthropic file nothing.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
+    t5 = pdf.paragraph(MARGIN_X, t5, "How each operator's data centers are powered, in GW. The off-grid / behind-the-meter column is press / permit / satellite-sourced (Cleanview) — it does NOT appear in any SEC filing. Capacity is an SEC figure ONLY for CoreWeave (10-K), Nebius (20-F) and — new, 8 Jun 2026 — xAI via SpaceX's IPO prospectus (shown in green); every other GW here is a press/analyst estimate, since the hyperscalers disclose no capacity and OpenAI/Anthropic file nothing.", 9.0, gray.clone(), PAGE_W - 2.0 * MARGIN_X) + 2.0;
 
     let og_head = [
         "Operator",
@@ -854,8 +860,8 @@ fn main() {
     // (operator, off-grid text, on-grid text, on-grid figure is SEC-disclosed)
     let og: [(&str, &str, &str, bool); 10] = [
         ("xAI \u{2014} Colossus (Memphis, TN)",
-         "~1.5 GW of on-site gas generators (~60 turbines, 2 sites); ~0.3 GW live \u{2192} >1 GW (Colossus 2)",
-         "\u{2014}  off-grid by design (negligible grid)", false),
+         "~1.5 GW of on-site gas generators (~60 turbines, 2 sites) \u{2014} powering the SEC-disclosed compute",
+         "\u{2014}  off-grid by design; total compute IS now SEC-disclosed: ~1.0 GW (Colossus I+II, SpaceX IPO prospectus, 8 Jun 2026) \u{2014} grid split still not stated", true),
         ("OpenAI \u{2014} Stargate (Abilene, TX +)",
          "Abilene: Crusoe-built on-site gas (within 1.2 GW). One planned site = 2.45 GW on-site (blocked by a New Mexico pipeline denial)",
          "\u{2014}  campus self-powered; grid share n/d", false),
@@ -899,9 +905,11 @@ fn main() {
     let ofw = PAGE_W - 2.0 * MARGIN_X;
     let mut of = og_bottom + 13.0;
     of = pdf.paragraph(MARGIN_X, of, "The capacity split (press, not SEC): Cleanview counts ~56 GW of planned behind-the-meter / off-grid capacity \u{2014} about 30% of all planned US data-center capacity \u{2014} with ~2 GW online today, almost entirely gas-fired. The other ~70% is grid-connected. None of this off-grid split appears in any SEC filing.", 7.4, offc.clone(), ofw) + 2.5;
-    of = pdf.paragraph(MARGIN_X, of, "Per the filings: 0 of 7 SEC filers disclose any off-grid / self-generated capacity or an on-/off-grid split; only CoreWeave (10-K) and Nebius (20-F) quantify capacity at all \u{2014} both on-grid (active / contracted MW\u{2013}GW, in green). The hyperscalers disclose no GW; xAI, OpenAI and Anthropic file nothing.", 7.4, gray.clone(), ofw) + 2.5;
-    of = pdf.paragraph(MARGIN_X, of, "Off-grid figures are press / satellite / permit-sourced: xAI ~1.5 GW of on-site turbines (Memphis); OpenAI Stargate one planned site 2.45 GW on-site (New Mexico pipeline denied); Meta's $1.6B / 400 MW Williams plant (New Albany). On-grid GW for the hyperscalers are analyst estimates, not SEC figures \u{2014} SEC filings do not disclose data-center capacity in GW.", 7.4, gray.clone(), ofw);
+    of = pdf.paragraph(MARGIN_X, of, "Per the filings: 0 SEC filers disclose any off-grid / self-generated capacity or an on-/off-grid split. Three now quantify capacity at all: CoreWeave (10-K) and Nebius (20-F) on-grid, and \u{2014} since 8 Jun 2026 \u{2014} xAI via SpaceX's IPO prospectus (FWP): Colossus I+II \u{2248}1.0 GW of compute power (C1 first cluster ~100k H100 / ~130 MW in 122 days; C2 first cluster ~110k GB200 / ~210 MW in 91 days; \u{2265}220k GB300 / >400 MW next). The hyperscalers disclose no GW; OpenAI and Anthropic file nothing.", 7.4, gray.clone(), ofw) + 2.5;
+    of = pdf.paragraph(MARGIN_X, of, "Off-grid figures are press / satellite / permit-sourced: xAI ~1.5 GW of on-site turbines (Memphis); OpenAI Stargate one planned site 2.45 GW on-site (New Mexico pipeline denied); Meta's $1.6B / 400 MW Williams plant (New Albany). On-grid GW for the hyperscalers are analyst estimates, not SEC figures \u{2014} even SpaceX's prospectus states no grid split for Colossus.", 7.4, gray.clone(), ofw);
     pdf.line(MARGIN_X, by(of), "Cleanview \u{2014} \"Bypassing the Grid\" (behind-the-meter data centers, 2026) \u{2197}", false, 7.4, link_c.clone(), Some(CLEANVIEW));
+    of += 9.5;
+    pdf.line(MARGIN_X, by(of), "SpaceX \u{2014} IPO FWP of 8 Jun 2026 (BaFin-approved EU retail prospectus, incl. the Colossus capacity disclosures) \u{2197}", false, 7.4, link_c.clone(), Some(SPACEX_EU_FWP));
 
     let page5 = PdfPage::new(printpdf::Mm(297.0), printpdf::Mm(210.0), std::mem::take(&mut pdf.ops));
 

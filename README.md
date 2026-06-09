@@ -21,14 +21,17 @@ alongside **FY2025 capital expenditure** figures pulled from SEC 10-K filings.
   (4) a **private operators** page with press/analyst estimates of the
   GPU/silicon vs. construction/power/land split for xAI, OpenAI and Anthropic
   (clearly separated from the SEC pages, as none of the three file with the SEC —
-  the one exception being xAI's compute, sold via SpaceX, whose IPO Free Writing
-  Prospectus discloses a Google compute deal at **$920M/mo for ~110k GPUs**,
-  Oct 2026–Jun 2029);
+  the exception being xAI's compute, sold via SpaceX, whose IPO Free Writing
+  Prospectuses disclose a Google compute deal at **$920M/mo for ~110k GPUs**,
+  Oct 2026–Jun 2029 (FWP, 5 Jun 2026), and — via the BaFin-approved EU retail
+  prospectus (FWP, 8 Jun 2026) — **Colossus I+II ≈1.0 GW of compute power**, the
+  first GW capacity figure for xAI in an SEC-filed document);
   (5) an **off-grid vs on-grid** page showing what each SEC filing actually
   discloses about how the data centers are powered — the finding being that
-  **0 of 7 filers** state grid vs. self-generation at the campus level, and the
-  ~56 GW behind-the-meter (mostly gas) build-out is **invisible to SEC filings**
-  (press/satellite-sourced, e.g. Cleanview).
+  **no filer** states grid vs. self-generation at the campus level (capacity
+  itself is SEC-quantified only by CoreWeave, Nebius and now xAI-via-SpaceX), and
+  the ~56 GW behind-the-meter (mostly gas) build-out is **invisible to SEC
+  filings** (press/satellite-sourced, e.g. Cleanview).
 - `png/sec_financials.png` — page 2 rasterized for social posting (generated on
   demand by `--post-sec`).
 - [`pdf/spacex_exposure.pdf`](pdf/spacex_exposure.pdf) — a separate one-page A4
