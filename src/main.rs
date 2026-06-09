@@ -123,12 +123,12 @@ fn main() {
         let pdf_url = "github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf";
         let caption = format!(
             "The AI data-center buildout, in one document — capacity, SEC financials, and the private players. Swipe through all five pages:\n\n\
-            New this week: xAI's compute finally shows up in an SEC filing. SpaceX's IPO prospectus (FWP, 5 Jun 2026) discloses a Google cloud deal — $920M/month for ~110,000 Nvidia GPUs, Oct 2026–Jun 2029 (~$30B over the term). With the Anthropic lease ($1.25B/mo for Colossus 1), that's the first xAI/SpaceX compute revenue any regulator has seen on paper. It's linked on page 1 and footnoted on page 4.\n\n\
+            New: xAI's data centers finally show up in SEC filings — twice. SpaceX's IPO FWP (5 Jun 2026) disclosed the Google cloud deal ($920M/month for ~110,000 Nvidia GPUs, Oct 2026–Jun 2029, ~$30B over the term). And its EU retail prospectus (FWP, 8 Jun 2026, BaFin-approved, also passported to Swiss retail) now quantifies the hardware: Colossus I+II ≈1.0 GW of compute power — first cluster of 100k H100 (~130 MW) online in 122 days, first 110k GB200 (~210 MW) in 91 days, ≥220k GB300 and >400 MW more coming. The first GW capacity figure for xAI in an SEC-filed document — until now, every GW number for the private operators was press/analyst estimate. Linked on pages 1, 4 and 5.\n\n\
             1/ Power capacity (GW), operational vs. planned, with FY2025 capex & est. $/GW — Amazon, Microsoft, Google, Meta, Oracle, xAI, OpenAI, Anthropic.\n\
             2/ The SEC 10-K financials: capex FY23–25, PP&E, operating cash flow, capex÷OCF and \"leases not yet commenced\". Incl. Oracle (RPO backlog $553B; FY26 capex ~$50B).\n\
             3/ Where the capital actually sits — compute/servers vs. real estate vs. construction-in-progress, straight from each property & equipment note.\n\
             4/ The private players (xAI, OpenAI, Anthropic): press/analyst estimates of GPUs/silicon vs. construction/power/land — plus the SpaceX FWP exception above.\n\
-            5/ Off-grid vs on-grid: what the SEC filings actually disclose about how the data centers are powered (spoiler: almost nothing — the behind-the-meter gas build-out is invisible to 10-Ks).\n\n\
+            5/ Off-grid vs on-grid: what the SEC filings actually disclose about how the data centers are powered. Capacity is now SEC-quantified by three (CoreWeave, Nebius, xAI via SpaceX) — but still not one filer states a grid split, and the ~56 GW behind-the-meter gas build-out remains invisible to the filings.\n\n\
             Every figure links to its SEC filing — download the PDF (here, or on GitHub) to click through: {pdf_url}\n\
             #AI #DataCenters #CapEx #SEC"
         );
