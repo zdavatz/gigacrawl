@@ -2,6 +2,7 @@ use ab_glyph::{Font, FontRef, Glyph, PxScale, ScaleFont};
 use image::{Rgba, RgbaImage};
 
 mod linkedin;
+mod signal;
 mod twitter;
 
 // ---- Font handles (DejaVu Sans available on this system) ----
@@ -73,6 +74,92 @@ fn main() {
         if let Err(e) = twitter::delete_tweet(&id) {
             eprintln!("[twitter] delete failed: {e}");
             std::process::exit(1);
+        }
+        return;
+    }
+
+    // `--signal-link`: one-time — link this machine to the user's Signal
+    // account as a secondary device (prints a QR code to scan with the phone).
+    if args.iter().any(|a| a == "--signal-link") {
+        if let Err(e) = signal::link_device() {
+            eprintln!("[signal] link failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
+    // `--signal-groups`: list the groups known to the Signal store
+    // (`<master key hex>  <title>`) to pick a --post-signal target.
+    if args.iter().any(|a| a == "--signal-groups") {
+        if let Err(e) = signal::list_groups() {
+            eprintln!("[signal] listing groups failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
+    // `--signal-messages <group>`: dump the stored thread (timestamps,
+    // attachment counts, bodies) — debug aid for --signal-delete.
+    if let Some(i) = args.iter().position(|a| a == "--signal-messages") {
+        let group = args.get(i + 1).cloned().unwrap_or_default();
+        if group.is_empty() {
+            eprintln!("--signal-messages requires <group>");
+            std::process::exit(1);
+        }
+        if let Err(e) = signal::list_messages(&group) {
+            eprintln!("[signal] listing messages failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
+    // `--signal-delete <group> <timestamp>`: delete-for-everyone a message
+    // this account sent to the group (timestamp printed by --post-signal /
+    // --signal-messages).
+    if let Some(i) = args.iter().position(|a| a == "--signal-delete") {
+        let group = args.get(i + 1).cloned().unwrap_or_default();
+        let ts: u64 = args
+            .get(i + 2)
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_default();
+        if group.is_empty() || ts == 0 {
+            eprintln!("--signal-delete requires <group> <timestamp>");
+            std::process::exit(1);
+        }
+        if let Err(e) = signal::delete_group_message(&group, ts) {
+            eprintln!("[signal] delete failed: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
+    // `--post-signal <group> [message]`: send pdf/datacenter_sources.pdf to a
+    // Signal group. <group> is a 64-char hex master key or a (unique) title
+    // substring; the optional [message] overrides the default caption.
+    if let Some(i) = args.iter().position(|a| a == "--post-signal") {
+        let group = args.get(i + 1).cloned().unwrap_or_default();
+        if group.is_empty() {
+            eprintln!("--post-signal requires <group> (hex master key or title substring)");
+            std::process::exit(1);
+        }
+        let pdf_path = std::path::Path::new("pdf/datacenter_sources.pdf");
+        if !pdf_path.exists() {
+            eprintln!("pdf/datacenter_sources.pdf not found — run `datacenter_pdf` first");
+            std::process::exit(1);
+        }
+        let default_caption = "AI data-center buildout — capacity (GW), SEC 10-K financials, \
+            PP&E composition, the private players, and off-grid vs on-grid (5 pages; every \
+            figure links to its SEC filing). New: SpaceX's IPO prospectus disclosed Colossus \
+            I+II ≈1.0 GW — the first SEC-filed GW figure for xAI.\n\
+            https://github.com/zdavatz/gigacrawl/blob/main/pdf/datacenter_sources.pdf"
+            .to_string();
+        let caption = args.get(i + 2).cloned().unwrap_or(default_caption);
+        match signal::send_pdf_to_group(&group, pdf_path, &caption) {
+            Ok(title) => println!("Sent PDF to Signal group \"{title}\""),
+            Err(e) => {
+                eprintln!("[signal] send failed: {e}");
+                std::process::exit(1);
+            }
         }
         return;
     }

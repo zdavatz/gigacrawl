@@ -33,6 +33,13 @@ cargo run --release --bin datacenter_chart -- --post-pdf-doc   # post pdf/datace
 cargo run --release --bin datacenter_chart -- --post-spacex-doc # post pdf/spacex_exposure.pdf to LinkedIn as a NATIVE document (German caption)
 cargo run --release --bin datacenter_chart -- --post-png <path> <caption>  # post one PNG as a plain standalone tweet
 cargo run --release --bin datacenter_chart -- --delete-tweet <id>
+
+# Signal (datacenter_chart only; build needs PROTOC=~/.local/protoc/bin/protoc — system protoc 3.6.1 is too old for libsignal):
+cargo run --release --bin datacenter_chart -- --signal-link        # once: provisioning QR -> /tmp/signal_link_qr.png, opened in viewer, scan with phone
+cargo run --release --bin datacenter_chart -- --signal-groups      # list groups: <64-hex master key>  <title>
+cargo run --release --bin datacenter_chart -- --post-signal <group> [message]  # send pdf/datacenter_sources.pdf to the group
+cargo run --release --bin datacenter_chart -- --signal-messages <group>        # dump stored thread (timestamps, attachment counts)
+cargo run --release --bin datacenter_chart -- --signal-delete <group> <ts>     # delete-for-everyone (ts printed by --post-signal)
 ```
 
 `--post-pdf` posts to LinkedIn (`multiImage`) and best-effort to X; it still
@@ -174,6 +181,31 @@ and `datacenter_pdf`, so a content change must be applied in both files. The
   the **same** app and the app must be Read+Write — a `401`/`code 89` means
   mismatched/invalid creds; `403` means the account lacks write/credit (X free
   tier ended Feb 2026, writes are pay-per-use).
+- `src/signal.rs` — Signal group messaging via **presage** (Rust client stack
+  on the official libsignal crates; git deps pinned by rev in `Cargo.toml`,
+  which also repeats presage's required `[patch.crates-io]` entries — patches
+  only apply at the workspace root). The machine is a **linked secondary
+  device** ("gigacrawl") of the user's Signal account; state in
+  `signal_store.db3` (cwd/$HOME, gitignored — it can send as the user). presage
+  is async: each entry point wraps a current-thread tokio runtime + `LocalSet`
+  (`block_on`). `link_device()` renders the provisioning QR to
+  `/tmp/signal_link_qr.png` and `open::that`s it (terminal QR art mangles in
+  some emulators); the provisioning socket is short-lived — on "no provisioning
+  message received", rerun and scan immediately. Every send/list first drains
+  the incoming queue (`sync_until_empty`) because **groups/contacts are only
+  learned from synced messages** — an unknown group means nobody has posted in
+  it since linking. `send_pdf_to_group` uploads via
+  `manager.upload_attachments` then sends a `DataMessage` with `group_v2`
+  context (revision 0 is fine) and prints the sent **timestamp**, which
+  `delete_group_message` (`--signal-delete`) needs for delete-for-everyone —
+  Signal edits can't add attachments, so fixing a botched post = delete +
+  resend. The sender's own phone displays the synced sent-copy and may not
+  render the attachment chip even when `--signal-messages` shows
+  `attachments=1` for the stored message. Build gotchas: needs protoc ≥ 3.12
+  (`PROTOC=~/.local/protoc/bin/protoc`, official 25.3 binary installed there;
+  system Gentoo protoc is 3.6.1) — and beware `pkill -f <pattern>` in this
+  sandbox: it matches its own wrapper shell and kills the command chain (exit
+  144); use `pkill -x`.
 
 ### Conventions that matter
 

@@ -2,3 +2,6 @@
 linkedin_credentials.json
 linkedin_token.json
 twitter_credentials.json
+signal_store.db3
+signal_store.db3-shm
+signal_store.db3-wal

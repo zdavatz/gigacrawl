@@ -166,6 +166,33 @@ Note: LinkedIn's in-feed PDF viewer **rasterizes** the pages, so the per-figure
 10-K hyperlinks are clickable only after a reader **downloads** the PDF — the
 caption points at the GitHub copy for click-through. X accepts no PDFs.
 
+### Send the PDF to a Signal group
+
+`src/signal.rs` integrates [presage](https://github.com/whisperfish/presage)
+(the Rust client stack on the official libsignal crates; git-only — Signal
+publishes nothing to crates.io). This machine acts as a **linked secondary
+device** of your Signal account, like Signal Desktop; the protocol state lives
+in `signal_store.db3` (cwd or `$HOME`, gitignored — treat it like a token file,
+it can send messages as you).
+
+```sh
+cargo run --release --bin datacenter_chart -- --signal-link       # once: QR scan with the phone
+cargo run --release --bin datacenter_chart -- --signal-groups     # list groups: <master key>  <title>
+cargo run --release --bin datacenter_chart -- --post-signal <group> [message]  # send the PDF
+cargo run --release --bin datacenter_chart -- --signal-messages <group>        # dump thread (debug)
+cargo run --release --bin datacenter_chart -- --signal-delete <group> <ts>     # delete-for-everyone
+```
+
+`--signal-link` renders the provisioning QR to `/tmp/signal_link_qr.png` and
+opens it in the default image viewer (terminal QR art is unreliable); scan it
+quickly — the provisioning socket times out after a minute or two; on
+"no provisioning message received" just rerun. `<group>` is the 64-char hex
+master key or a unique title substring. Groups appear in `--signal-groups`
+only after a message in them has been synced. Building needs **protoc ≥ 3.12**:
+if the system one is older, drop a
+[protoc release binary](https://github.com/protocolbuffers/protobuf/releases)
+into `~/.local/protoc` and build with `PROTOC=~/.local/protoc/bin/protoc`.
+
 ### Post a single PNG to X
 
 `--post-png <path> <caption>` posts one PNG as a plain standalone tweet —
